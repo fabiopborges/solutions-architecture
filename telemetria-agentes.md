@@ -322,7 +322,7 @@ Registro contínuo de quanto o time de agentes gasta por demanda real. Mantido p
 
 > **Ressalva de medição que muda a leitura desta entrada inteira:** **nenhum número de token por agente chegou a esta frente 2.** Diferente das oito entradas anteriores, **não há tabela de tokens aqui**, e **nada foi estimado para preencher o buraco**. O que se sabe desta execução foi apurado **nos artefatos em disco**, não em contadores. Ver `demandas/agente-de-cobranca-interno-oracle-e-ipnet/custo-processamento.md`, seção 2.
 
-**Nona demanda, primeira com insumo em PDF de origem corporativa** (SPTI v2.1, 24 páginas, em `input_...`/`Agente de Cobrança Interno - Oracle e IPNET.pdf`, transcrito para `insumos/spti-original-transcricao.txt`), e **primeira com stack de fornecedor herdada de fora da cadeia** (Oracle e IPNET já escolhidos, formalizado no ADR 024). Classificação herdada: USO INTERNO por TELEFÓNICA, propagada a todo artefato.
+**Nona demanda, primeira com insumo em PDF de origem corporativa** ([REDIGIDO], 24 páginas, em `input_...`/`[REDIGIDO]`, transcrito para `insumos/[REDIGIDO]`), e **primeira com stack de fornecedor herdada de fora da cadeia** (Oracle e IPNET já escolhidos, formalizado no ADR 024). Classificação herdada: [REDIGIDO: classificação e cliente], propagada a todo artefato.
 
 **O que rodou, apurado nos artefatos (não no resumo do despacho):**
 
@@ -347,7 +347,7 @@ Registro contínuo de quanto o time de agentes gasta por demanda real. Mantido p
 | **Comunicação com Stakeholders** | **não iniciada** | — |
 | **Entrega e Handoff** | **não iniciada** | — |
 
-**Quatro atividades retidas pela mesma causa única:** **1 dos 11 anexos citados pela SPTI não foi entregue pela área**, e é justamente o de volumetria. Nenhum dos quatro agentes inventou um número de ordem de grandeza para destravar — `qualidade.md` chega a declarar que não contém **uma única quantidade dimensional**, inclusive nenhum tamanho de amostra de teste. É a retenção funcionando como projetada, não como bloqueio acidental.
+**Quatro atividades retidas pela mesma causa única:** **1 dos 11 anexos citados pela [REDIGIDO] não foi entregue pela área**, e é justamente o de volumetria. Nenhum dos quatro agentes inventou um número de ordem de grandeza para destravar — `qualidade.md` chega a declarar que não contém **uma única quantidade dimensional**, inclusive nenhum tamanho de amostra de teste. É a retenção funcionando como projetada, não como bloqueio acidental.
 
 **Gate de saída do Orquestrador: 0 de 4.** Aprovação humana do pacote pendente; a **única** aprovação humana desta demanda é o ADR 024.
 
