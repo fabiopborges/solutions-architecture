@@ -17,5 +17,13 @@ docs/estudo-para-novas-propostas-solucoes/
 # Entrada de novas demandas
 input_demandas/
 
-# Local de armazenamento das ADRs geradas por projeto
+# Local de armazenamento das ADRs geradas por projeto. Regra deliberadamente
+# assimétrica: os ADRs 001 a 023 já estavam versionados quando esta linha
+# entrou e continuam publicados de propósito (são decisões da casa e de
+# demandas sintéticas, e o README aponta para eles). O que esta linha protege
+# são os ADRs de demanda real dali em diante — a partir do 024 — que ficam só
+# no clone local, junto de `demandas/` e `input_demandas/`. Nunca use
+# `git add -f` para forçar um ADR de demanda real para dentro do repositório:
+# `.gitignore` não desversiona o que já está rastreado, então um `-f` aqui é
+# irreversível na prática (o valor fica no histórico público).
 adrs/

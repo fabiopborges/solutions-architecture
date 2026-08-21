@@ -322,7 +322,7 @@ Registro contínuo de quanto o time de agentes gasta por demanda real. Mantido p
 
 > **Ressalva de medição que muda a leitura desta entrada inteira:** **nenhum número de token por agente chegou a esta frente 2.** Diferente das oito entradas anteriores, **não há tabela de tokens aqui**, e **nada foi estimado para preencher o buraco**. O que se sabe desta execução foi apurado **nos artefatos em disco**, não em contadores. Ver `demandas/agente-de-cobranca-interno-oracle-e-ipnet/custo-processamento.md`, seção 2.
 
-**Nona demanda, primeira com insumo em PDF de origem corporativa** ([REDIGIDO], 24 páginas, em `input_...`/`[REDIGIDO]`, transcrito para `insumos/[REDIGIDO]`), e **primeira com stack de fornecedor herdada de fora da cadeia** (Oracle e IPNET já escolhidos, formalizado no ADR 024). Classificação herdada: [REDIGIDO: classificação e cliente], propagada a todo artefato.
+**Nona demanda, primeira com insumo em PDF de origem corporativa** (documento de origem da área demandante, 24 páginas, mantido apenas no clone local em `input_demandas/` e transcrito para `insumos/` dentro da pasta da demanda — **nada disso é versionado**), e **primeira com stack de fornecedor herdada de fora da cadeia** (fornecedores já escolhidos antes da demanda chegar, formalizado no ADR 024). **Classificação herdada do documento de origem: uso interno do cliente**, propagada a todo artefato — é por isso que nem o insumo, nem os artefatos, nem os ADRs 024 a 046 desta demanda aparecem neste repositório público. **O nome do cliente e a identificação do documento de origem não são reproduzidos aqui, por decorrência dessa mesma classificação.**
 
 **O que rodou, apurado nos artefatos (não no resumo do despacho):**
 
@@ -347,7 +347,7 @@ Registro contínuo de quanto o time de agentes gasta por demanda real. Mantido p
 | **Comunicação com Stakeholders** | **não iniciada** | — |
 | **Entrega e Handoff** | **não iniciada** | — |
 
-**Quatro atividades retidas pela mesma causa única:** **1 dos 11 anexos citados pela [REDIGIDO] não foi entregue pela área**, e é justamente o de volumetria. Nenhum dos quatro agentes inventou um número de ordem de grandeza para destravar — `qualidade.md` chega a declarar que não contém **uma única quantidade dimensional**, inclusive nenhum tamanho de amostra de teste. É a retenção funcionando como projetada, não como bloqueio acidental.
+**Quatro atividades retidas pela mesma causa única:** **1 dos 11 anexos citados pelo documento de origem não foi entregue pela área**, e é justamente o de volumetria. Nenhum dos quatro agentes inventou um número de ordem de grandeza para destravar — `qualidade.md` chega a declarar que não contém **uma única quantidade dimensional**, inclusive nenhum tamanho de amostra de teste. É a retenção funcionando como projetada, não como bloqueio acidental.
 
 **Gate de saída do Orquestrador: 0 de 4.** Aprovação humana do pacote pendente; a **única** aprovação humana desta demanda é o ADR 024.
 
