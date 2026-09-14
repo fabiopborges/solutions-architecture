@@ -14,6 +14,9 @@ __pycache__/
 # Estudos para novas propostas de soluções, não versionar.
 docs/estudo-para-novas-propostas-solucoes/
 
+# Estudo de refatoração/aderência (ex.: MuleSoft Agent Fabric), não versionar.
+docs/refactory/
+
 # Entrada de novas demandas
 input_demandas/
 
