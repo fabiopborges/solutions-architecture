@@ -1,0 +1,34 @@
+{
+  "name": "Infraestrutura e Deployment",
+  "description": "Define como cada componente do desenho é hospedado, em qual provedor de cloud, com que estratégia de escala e disponibilidade, agnóstico de provedor e por critério de negócio.",
+  "url": "N/A (subagente Claude Code)",
+  "version": "1.0.0",
+  "provider": {
+    "organization": "Arquiteto de Soluções Júnior",
+    "url": "https://github.com/fabiopborges/solutions-architecture-jr"
+  },
+  "protocol_version": "0.3.0",
+  "capabilities": {
+    "streaming": false,
+    "push_notifications": false,
+    "state_transition_history": false
+  },
+  "skills": [
+    {
+      "id": "infraestrutura-e-deployment",
+      "name": "Definição de Infraestrutura e Deployment",
+      "description": "Escolhe hospedagem, provedor de cloud (agnóstico, por critério de negócio) e estratégia de escala/disponibilidade por componente do desenho.",
+      "tags": [
+        "infraestrutura",
+        "cloud-agnostica",
+        "escala-e-disponibilidade"
+      ]
+    }
+  ],
+  "default_input_modes": [
+    "text/markdown"
+  ],
+  "default_output_modes": [
+    "text/markdown"
+  ]
+}

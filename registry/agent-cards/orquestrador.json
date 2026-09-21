@@ -1,0 +1,35 @@
+{
+  "name": "Orquestrador",
+  "description": "O gerente do loop. Não faz nenhuma atividade de arquitetura sozinho; decide a ordem em que os agentes de atividade entram, dispara em paralelo o que não depende de nada, e segura o gate de saída.",
+  "url": "N/A (subagente Claude Code)",
+  "version": "1.0.0",
+  "provider": {
+    "organization": "Arquiteto de Soluções Júnior",
+    "url": "https://github.com/fabiopborges/solutions-architecture-jr"
+  },
+  "protocol_version": "0.3.0",
+  "capabilities": {
+    "streaming": false,
+    "push_notifications": false,
+    "state_transition_history": false
+  },
+  "skills": [
+    {
+      "id": "orquestrador",
+      "name": "Orquestração da cadeia de atividades",
+      "description": "Decide ordem e paralelismo dos agentes de atividade, trata dúvida entre agentes até o limite de 3 rodadas, e segura o gate de saída (suposições escritas, dúvidas resolvidas, pacote final presente, aprovação humana) antes de qualquer entrega.",
+      "tags": [
+        "orquestracao",
+        "paralelismo",
+        "gate-de-saida"
+      ]
+    }
+  ],
+  "default_input_modes": [
+    "text/plain",
+    "text/markdown"
+  ],
+  "default_output_modes": [
+    "text/markdown"
+  ]
+}

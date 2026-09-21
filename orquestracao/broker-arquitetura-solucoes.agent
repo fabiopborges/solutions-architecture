@@ -1,0 +1,95 @@
+# MVP 2 — Agent Script do broker `broker-arquitetura-solucoes`
+#
+# SUPOSIÇÃO EXPLÍCITA: nem mvp-base.md nem mvp2.md especificam a sintaxe
+# interna de um arquivo .agent (Agent Script) além do conceito geral
+# ("cada nó é um passo discreto, probabilístico ou determinístico; toda
+# grafo começa em um A2A trigger"). Este arquivo reaproveita literalmente
+# o mesmo schema nodes/edges/triggers já usado em agent-network.yaml —
+# só que com escopo de UM broker — em vez de inventar uma sintaxe própria
+# de Agent Script. Se a sintaxe real do MuleSoft Agent Fabric divergir
+# disto, este arquivo precisa ser reescrito quando a migração acontecer.
+#
+# NÃO VALIDADO: não foi executado/testado contra o Agent Broker real.
+
+broker:
+  id: broker-arquitetura-solucoes
+  card:
+    name: "Broker do Arquiteto de Soluções Júnior"
+    description: "Coordena a cadeia de 19 agentes de arquitetura de soluções, do entendimento da demanda à entrega, com paralelismo onde não há dependência."
+    protocol_version: "0.3.0"
+  spec:
+    # Não existe LLM/instruções/toolset de broker documentado à parte — o
+    # comportamento de "decidir ordem, tratar dúvida entre agentes até 3
+    # rodadas, e segurar o gate de saída" é o já descrito em
+    # agents/orquestrador/AGENT.md. Referenciado aqui, não duplicado.
+    orchestrator_agent: "orquestrador"
+    dispute_resolution:
+      max_rounds: 3
+      on_limit: "escalar para revisão humana"
+      source: "agents/orquestrador/AGENT.md, seção 'Como trata dúvida entre agentes'; rules/always.md"
+
+# Nós e arestas: mesmo conteúdo de orquestracao/agent-network.yaml (fonte
+# única), repetido aqui porque este broker é o único da rede — não há
+# fragmentação por domínio de negócio documentada em nenhum arquivo-fonte
+# que justificasse mais de um broker.
+trigger:
+  id: disparo-da-demanda
+  type: a2a
+  target: entendimento-e-escopo
+
+nodes:
+  - { id: entendimento-e-escopo, type: probabilistic }
+  - { id: desenho-de-arquitetura, type: probabilistic }
+  - { id: modelagem-de-dados, type: probabilistic }
+  - { id: infraestrutura-e-deployment, type: probabilistic }
+  - { id: testes-e-qualidade, type: probabilistic }
+  - { id: jornadas-do-usuario, type: probabilistic }
+  - { id: pesquisa-e-benchmarking, type: probabilistic, condition: "tecnologia não resolvida pela stack aprovada" }
+  - { id: especialista-ia-ml, type: probabilistic, condition: "decisão de seleção/treino/integração de modelo de IA/ML" }
+  - { id: especialista-dados-analytics, type: probabilistic, condition: "decisão de plataforma de dados analíticos" }
+  - { id: trade-offs-e-adr, type: probabilistic }
+  - { id: seguranca-e-compliance, type: probabilistic }
+  - { id: estimativa-de-custo, type: probabilistic }
+  - { id: observabilidade-e-telemetria, type: probabilistic }
+  - { id: documentacao-final, type: deterministic }
+  - { id: riscos-e-mitigacao, type: probabilistic }
+  - { id: comunicacao-stakeholders, type: probabilistic }
+  - { id: entrega-e-handoff, type: probabilistic }
+  - { id: geracao-diagramas, type: deterministic }
+  - { id: gate-de-saida, type: deterministic }
+
+edges:
+  - { from: entendimento-e-escopo, to: desenho-de-arquitetura, type: blocking }
+  - { from: desenho-de-arquitetura, to: modelagem-de-dados, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: infraestrutura-e-deployment, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: testes-e-qualidade, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: jornadas-do-usuario, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: geracao-diagramas, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: pesquisa-e-benchmarking, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: especialista-ia-ml, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: especialista-dados-analytics, type: non-blocking }
+  - { from: modelagem-de-dados, to: especialista-dados-analytics, type: non-blocking }
+  - { from: especialista-ia-ml, to: especialista-dados-analytics, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: trade-offs-e-adr, type: non-blocking }
+  - { from: pesquisa-e-benchmarking, to: trade-offs-e-adr, type: non-blocking }
+  - { from: especialista-ia-ml, to: trade-offs-e-adr, type: non-blocking }
+  - { from: especialista-dados-analytics, to: trade-offs-e-adr, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: seguranca-e-compliance, type: blocking }
+  - { from: modelagem-de-dados, to: seguranca-e-compliance, type: blocking }
+  - { from: infraestrutura-e-deployment, to: estimativa-de-custo, type: blocking }
+  - { from: desenho-de-arquitetura, to: observabilidade-e-telemetria, type: blocking }
+  - { from: infraestrutura-e-deployment, to: observabilidade-e-telemetria, type: blocking }
+  - { from: modelagem-de-dados, to: documentacao-final, type: blocking }
+  - { from: infraestrutura-e-deployment, to: documentacao-final, type: blocking }
+  - { from: testes-e-qualidade, to: documentacao-final, type: blocking }
+  - { from: jornadas-do-usuario, to: documentacao-final, type: blocking }
+  - { from: seguranca-e-compliance, to: documentacao-final, type: blocking }
+  - { from: estimativa-de-custo, to: documentacao-final, type: blocking }
+  - { from: observabilidade-e-telemetria, to: documentacao-final, type: blocking }
+  - { from: documentacao-final, to: geracao-diagramas, type: blocking }
+  - { from: desenho-de-arquitetura, to: riscos-e-mitigacao, type: blocking }
+  - { from: testes-e-qualidade, to: riscos-e-mitigacao, type: blocking }
+  - { from: documentacao-final, to: comunicacao-stakeholders, type: blocking }
+  - { from: riscos-e-mitigacao, to: comunicacao-stakeholders, type: blocking }
+  - { from: comunicacao-stakeholders, to: entrega-e-handoff, type: blocking }
+  - { from: entrega-e-handoff, to: gate-de-saida, type: blocking }
