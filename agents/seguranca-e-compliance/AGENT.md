@@ -22,3 +22,24 @@ Se o desenho ou a modelagem de dados violar um requisito de compliance, sinaliza
 
 ## Como é bem feito
 Nenhum dado sensível listado na modelagem fica sem tratamento, e dá para apontar exatamente onde a autenticação e autorização acontecem em cada integração do desenho.
+
+agent_card:
+  name: "Segurança e Compliance"
+  description: "Define autenticação/autorização de cada integração do desenho e o tratamento de cada dado sensível da modelagem, além de apontar requisitos de compliance aplicáveis."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções Júnior"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "seguranca-e-compliance"
+      name: "Definição de Segurança e Compliance"
+      description: "Define autenticação/autorização por integração, tratamento por dado sensível, e requisitos de compliance regulatório aplicáveis, a partir do desenho e da modelagem de dados."
+      tags: ["seguranca", "compliance", "autenticacao-autorizacao"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

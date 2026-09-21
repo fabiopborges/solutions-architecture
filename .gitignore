@@ -11,6 +11,9 @@ demandas/
 .venv/
 __pycache__/
 
+# Log de runtime do servidor MCP, regenerado a cada consulta, não versionar.
+servidor/consultas.log
+
 # Estudos para novas propostas de soluções, não versionar.
 docs/estudo-para-novas-propostas-solucoes/
 

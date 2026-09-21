@@ -22,3 +22,24 @@ Diferente dos outros agentes da cadeia, este tem um gate de aprovação humana p
 
 ## Como é bem feito
 Toda decisão de arquitetura importante do OS tem um ADR revisado por trás, e o compêndio cresce a cada demanda em vez de cada uma repetir a mesma discussão do zero.
+
+agent_card:
+  name: "Trade-offs e ADR"
+  description: "Formaliza toda decisão de arquitetura importante como um ADR revisável, e mantém o compêndio de conhecimento crescendo com o resumo das decisões já aprovadas."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções Júnior"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "trade-offs-e-adr"
+      name: "Avaliação de Trade-offs e Registro de Decisão (ADR)"
+      description: "Registra contexto, alternativas descartadas, decisão e trade-offs de toda decisão de arquitetura importante, com gate de aprovação humana próprio antes de valer como oficial."
+      tags: ["adr", "trade-offs", "gate-de-aprovacao-humana"]
+  default_input_modes: ["text/plain"]
+  default_output_modes: ["text/markdown"]

@@ -22,3 +22,24 @@ Sinaliza para [[agents/desenho-de-arquitetura/AGENT]] com o que precisaria mudar
 
 ## Como é bem feito
 Quem ler o documento sabe exatamente onde o desenho ainda não aguenta o que o escopo prometeu, requisito por requisito.
+
+agent_card:
+  name: "Testes e Qualidade"
+  description: "Confere se o desenho de arquitetura atende os requisitos não funcionais do escopo, aponta pontos únicos de falha e valida a integração com legado — não testa código."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções Júnior"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "testes-e-qualidade"
+      name: "Plano de Testes e Qualidade da Arquitetura"
+      description: "Dá veredito (atende/não atende/atende parcial) para cada requisito não funcional do escopo contra o desenho, e aponta pontos únicos de falha e status da integração com legado."
+      tags: ["requisitos-nao-funcionais", "pontos-unicos-de-falha", "integracao-com-legado"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

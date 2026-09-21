@@ -22,3 +22,24 @@ O desenho de arquitetura de [[agents/desenho-de-arquitetura/AGENT]]. Se precisar
 
 ## Como é bem feito
 Qualquer outro agente da cadeia consegue saber quem é dono de um dado e como acessá-lo sem abrir o banco de outro serviço para descobrir.
+
+agent_card:
+  name: "Modelagem de Dados"
+  description: "Transforma o desenho de arquitetura em entidades com dono, fluxo entre serviços, retenção e sensibilidade definidos."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções Júnior"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "modelagem-de-dados"
+      name: "Modelagem de Dados"
+      description: "Define entidades, dono de cada uma, fluxo de dados entre serviços (evento vs. consulta) e retenção/sensibilidade a partir do desenho de arquitetura."
+      tags: ["modelagem-de-dados", "retencao", "sensibilidade"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

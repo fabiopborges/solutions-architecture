@@ -22,3 +22,24 @@ Não introduz nenhuma decisão técnica nova, nem simplifica a ponto de mudar o 
 
 ## Como é bem feito
 Um stakeholder não técnico lê e entende o que foi decidido e por quê, e sabe exatamente o que precisa aprovar depois de ler.
+
+agent_card:
+  name: "Comunicação com Stakeholders"
+  description: "Traduz o pacote final e o plano de riscos para linguagem que quem não é da área consegue entender, e termina apontando o que precisa de aprovação."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções Júnior"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "comunicacao-stakeholders"
+      name: "Comunicação e Apresentação para Stakeholders"
+      description: "Traduz o pacote final e o plano de riscos, já decididos, para linguagem sem jargão, focando em custo/prazo/risco principal, terminando com pergunta de aprovação."
+      tags: ["comunicacao", "sem-jargao", "aprovacao"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

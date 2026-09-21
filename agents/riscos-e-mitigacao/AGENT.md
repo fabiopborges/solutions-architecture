@@ -20,3 +20,24 @@ Qualquer agente com dúvida sobre se um risco tem mitigação, ou sobre a priori
 
 ## Como é bem feito
 Alguém do time consegue olhar a lista e saber, sem perguntar a ninguém, o que fazer a respeito de cada risco e qual deles merece atenção primeiro.
+
+agent_card:
+  name: "Riscos e Mitigação"
+  description: "Herda e aprofunda os riscos técnicos já sinalizados por outros agentes, adiciona riscos de negócio/projeto, prioriza tudo, e garante que cada risco tem mitigação ou aceite explícito."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções Júnior"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "riscos-e-mitigacao"
+      name: "Revisão de Riscos e Plano de Mitigação"
+      description: "Junta riscos técnicos herdados e riscos de negócio/projeto levantados à parte, prioriza por impacto e probabilidade, e define mitigação ou aceite explícito para cada um."
+      tags: ["riscos", "mitigacao", "priorizacao"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

@@ -29,3 +29,24 @@ Desenho de Arquitetura decide os bounded contexts e componentes. Jornadas do Usu
 
 ## Como é bem feito
 Alguém de fora do time técnico consegue ler uma jornada e entender, sem jargão de arquitetura, o que acontece do ponto de vista de quem usa a solução — e um desenvolvedor consegue usar a mesma jornada como roteiro direto para o diagrama de sequência.
+
+agent_card:
+  name: "Jornadas do Usuário"
+  description: "Traduz requisitos funcionais já aprovados e componentes já decididos em jornadas de usuário final observáveis, sem inventar requisito ou componente novo."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções Júnior"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "jornadas-do-usuario"
+      name: "Jornadas do Usuário"
+      description: "Agrupa RFs aprovados em jornadas por resultado observável pelo usuário final, com passo a passo de participação de componentes já existentes no desenho."
+      tags: ["jornadas-de-usuario", "requisitos-funcionais", "sequencia"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]
