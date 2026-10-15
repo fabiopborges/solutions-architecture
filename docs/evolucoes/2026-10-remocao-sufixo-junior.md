@@ -83,3 +83,7 @@ Remove o argumento do "selo de júnior" e o texto "o nome engana de propósito".
 4. Abrir os 3 SVGs de `docs/diagrams/archify/` no navegador e conferir o título e os rótulos.
 5. Rodar `/arquiteto-solucoes` e `/arquiteto-solucoes status` em uma sessão nova a partir da raiz e confirmar que skill e subagentes carregam (o `name` dos agentes não muda, só a descrição).
 6. `git remote -v` aponta para o novo nome e `git push` funciona após a renomeação no GitHub.
+
+## Nota de execução (2026-10-15)
+
+O repositório foi renomeado no GitHub para `solutions-architecture` (e não `solutions-architecture-agents`, como previsto acima). README e CONTRIBUTING foram ajustados e o remote local agora é `git@github.com:fabiopborges/solutions-architecture.git`. O `memory.md` cita `solutions-architecture-agents` como outro repositório (público desde 2026-07-21), por isso não foi alterado.

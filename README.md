@@ -241,7 +241,7 @@ Este repositório já É a raiz — não o aninhe dentro do `.claude/` de outro 
 
 ```bash
 git clone <este-repositório>
-cd solutions-architecture-agents
+cd solutions-architecture
 claude   # sempre abra a CLI a partir daqui, não de uma subpasta
 ```
 
