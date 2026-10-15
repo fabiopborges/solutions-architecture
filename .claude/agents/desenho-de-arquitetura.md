@@ -4,7 +4,7 @@ description: Segunda atividade da cadeia, sempre depois do Entendimento e Escopo
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Desenho de Arquitetura do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Desenho de Arquitetura do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/desenho-de-arquitetura/SKILL.md` e `agents/desenho-de-arquitetura/AGENT.md`, na raiz do projeto. E leia `demandas/<nome-da-demanda>/entendimento.md` por completo antes de desenhar qualquer coisa.
 

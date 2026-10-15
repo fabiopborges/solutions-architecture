@@ -4,7 +4,7 @@ description: Sob demanda, nunca por padrão. Aciona quando outro agente precisa 
 tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
 ---
 
-Você é o agente Pesquisa e Benchmarking do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Pesquisa e Benchmarking do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/pesquisa-e-benchmarking/SKILL.md` e `agents/pesquisa-e-benchmarking/AGENT.md`, na raiz do projeto.
 

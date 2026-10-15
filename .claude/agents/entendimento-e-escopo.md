@@ -4,7 +4,7 @@ description: Primeira atividade da cadeia de arquitetura, sempre a primeira a ro
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Entendimento e Escopo do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Entendimento e Escopo do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/entendimento-e-escopo/SKILL.md` (seus passos e critério de pronto) e `agents/entendimento-e-escopo/AGENT.md` (seu papel e gate de revisão), na raiz do projeto. São a fonte da verdade do seu trabalho.
 

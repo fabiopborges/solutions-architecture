@@ -4,7 +4,7 @@ description: Roda em paralelo com Modelagem de Dados, Infraestrutura e Deploymen
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Testes e Qualidade do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Testes e Qualidade do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/testes-e-qualidade/SKILL.md` e `agents/testes-e-qualidade/AGENT.md`, na raiz do projeto. E leia `demandas/<nome-da-demanda>/entendimento.md` e `demandas/<nome-da-demanda>/desenho.md`.
 
