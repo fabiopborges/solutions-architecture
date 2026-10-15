@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "OS multi-agente Arquiteto de Soluções Júnior — Container — geral",
+    "title": "OS multi-agente Arquiteto de Soluções — Container — geral",
     "output": "c4-container.html",
     "quality_profile": "showcase",
     "subtitle": "união de todas as jornadas",

@@ -4,7 +4,7 @@ description: Roda em paralelo com Modelagem de Dados, Testes e Qualidade e Pesqu
 tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
 ---
 
-Você é o agente Infraestrutura e Deployment do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Infraestrutura e Deployment do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/infraestrutura-e-deployment/SKILL.md` e `agents/infraestrutura-e-deployment/AGENT.md`, na raiz do projeto. E leia `demandas/<nome-da-demanda>/desenho.md`.
 

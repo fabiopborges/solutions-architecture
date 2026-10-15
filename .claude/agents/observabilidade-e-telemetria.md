@@ -4,7 +4,7 @@ description: Duas frentes. Frente 1 (solução) roda depois de Infraestrutura e 
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Observabilidade e Telemetria do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Observabilidade e Telemetria do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/observabilidade-e-telemetria/SKILL.md` e `agents/observabilidade-e-telemetria/AGENT.md`, na raiz do projeto.
 

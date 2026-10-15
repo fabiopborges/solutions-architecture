@@ -4,7 +4,7 @@ description: Roda em paralelo com Documentação Final, depois que Desenho de Ar
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Riscos e Mitigação do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Riscos e Mitigação do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/riscos-e-mitigacao/SKILL.md` e `agents/riscos-e-mitigacao/AGENT.md`, na raiz do projeto. E leia `demandas/<nome-da-demanda>/desenho.md` e `demandas/<nome-da-demanda>/qualidade.md`.
 

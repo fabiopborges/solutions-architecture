@@ -4,7 +4,7 @@ description: Aciona logo depois do Desenho de Arquitetura, em paralelo com Model
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Jornadas do Usuário do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Jornadas do Usuário do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/jornadas-do-usuario/SKILL.md`, `agents/jornadas-do-usuario/AGENT.md`, e os documentos `entendimento.md` + `desenho.md` da demanda, na raiz do projeto.
 

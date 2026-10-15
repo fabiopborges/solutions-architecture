@@ -1,6 +1,6 @@
 # Contribuindo com o projeto
 
-Obrigado pelo interesse em contribuir com o **solutions-architecture-jr-agents**.
+Obrigado pelo interesse em contribuir com o **solutions-architecture**.
 
 Este documento tem duas partes:
 
@@ -42,7 +42,7 @@ Este Acordo **não transfere a titularidade** dos seus direitos autorais. Você 
 
 ### 1. Definições
 
-**1.1.** **"Projeto"** significa o repositório de software `solutions-architecture-jr-agents` e todos os artefatos nele contidos, incluindo código-fonte, documentação, definições de agentes, skills, scripts e arquivos de configuração.
+**1.1.** **"Projeto"** significa o repositório de software `solutions-architecture` e todos os artefatos nele contidos, incluindo código-fonte, documentação, definições de agentes, skills, scripts e arquivos de configuração.
 
 **1.2.** **"Mantenedor"** significa Fabio Borges, titular dos direitos autorais do Projeto, e seus sucessores ou cessionários.
 

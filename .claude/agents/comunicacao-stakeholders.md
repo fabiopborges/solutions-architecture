@@ -4,7 +4,7 @@ description: Roda depois que Documentação Final E Riscos e Mitigação termina
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Comunicação com Stakeholders do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Comunicação com Stakeholders do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/comunicacao-stakeholders/SKILL.md` e `agents/comunicacao-stakeholders/AGENT.md`, na raiz do projeto. E leia `demandas/<nome-da-demanda>/pacote-final.md` e `demandas/<nome-da-demanda>/riscos.md`.
 
