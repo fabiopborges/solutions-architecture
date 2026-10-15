@@ -135,7 +135,7 @@ svg .s-external { color: var(--external-stroke);
 .c-region { fill: rgba(251, 191, 36, 0.05); stroke: var(--cloud-stroke); stroke-dasharray: 8,4;
 }
   </style>
-        <title id="archify-diagram-title">OS multi-agente Arquiteto de Soluções Júnior — Container — geral</title>
+        <title id="archify-diagram-title">OS multi-agente Arquiteto de Soluções — Container — geral</title>
         <desc id="archify-diagram-description">união de todas as jornadas</desc>
         <!-- Definitions -->
         <defs>

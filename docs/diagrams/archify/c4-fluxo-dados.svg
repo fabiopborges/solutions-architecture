@@ -131,7 +131,7 @@ svg .s-external { color: var(--external-stroke);
 .m-dashed { fill: var(--database-stroke);
 }
   </style>
-        <title id="archify-diagram-title">OS multi-agente Arquiteto de Soluções Júnior — Fluxo de Dados</title>
+        <title id="archify-diagram-title">OS multi-agente Arquiteto de Soluções — Fluxo de Dados</title>
         <desc id="archify-diagram-description">Fluxo de dados entre componentes (evento vs. consulta), fonte: dados.md</desc>
         <!-- Definitions -->
         <defs>

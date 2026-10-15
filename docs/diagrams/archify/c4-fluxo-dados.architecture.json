@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "OS multi-agente Arquiteto de Soluções Júnior — Fluxo de Dados",
+    "title": "OS multi-agente Arquiteto de Soluções — Fluxo de Dados",
     "output": "c4-fluxo-dados.html",
     "quality_profile": "showcase",
     "subtitle": "Fluxo de dados entre componentes (evento vs. consulta), fonte: dados.md",
