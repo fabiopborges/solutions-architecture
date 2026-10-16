@@ -1,6 +1,6 @@
 # Telemetria dos Agentes
 
-Registro contínuo de quanto o time de agentes gasta por demanda real. Mantido pelo agente [[agents/observabilidade-e-telemetria/AGENT]], frente 2. Nove demandas rodaram até agora: a primeira simulada (um agente-modelo narrando os 14 papéis), as demais via subagentes reais (`/arquiteto-solucoes`), com uso de token medido de verdade por agente — **exceto a nona (`agente-de-cobranca-interno-oracle-e-ipnet`), a primeira em que os números de token não chegaram a esta frente 2 e por isso não constam; ver a ressalva na própria entrada, eles não foram estimados**.
+Registro contínuo de quanto o time de agentes gasta por demanda real. Mantido pelo agente [[agents/observabilidade-e-telemetria/AGENT]], frente 2. Dez demandas rodaram até agora (a décima, `sol-4578-event-mesh-platform`, também sem token por agente): a primeira simulada (um agente-modelo narrando os 14 papéis), as demais via subagentes reais (`/arquiteto-solucoes`), com uso de token medido de verdade por agente — **exceto a nona (`agente-de-cobranca-interno-oracle-e-ipnet`), a primeira em que os números de token não chegaram a esta frente 2 e por isso não constam; ver a ressalva na própria entrada, eles não foram estimados**.
 
 ## Formato de uma entrada
 - Demanda:
@@ -398,3 +398,49 @@ Registradas porque a regra desta frente é registrar o apurado, não o narrado:
    - A Modelagem de Dados descobriu que **o opt-out do titular guardado no registro de mailing seria ressuscitado pela carga de arquivo seguinte** — `RegistroAcionavel` é reconstruído a cada carga (RF-04), então a oposição ao acionamento morreria em silêncio na próxima ingestão. Virou entidade durável fora do registro de mailing (E-66, MD-ADR-10). **É um bug de comportamento em produção capturado em fase de modelagem**, e do tipo que só aparece para quem olha o ciclo de vida do dado, não o requisito.
 
 **Custo real em US$/R$:** pendente, a preencher por quem operou a sessão — **não estimado por este agente**. Ver `demandas/agente-de-cobranca-interno-oracle-e-ipnet/custo-processamento.md`.
+
+---
+
+### 2026-10-16 — sol-4578-event-mesh-platform
+
+> **Atualização após o gate (2026-10-16):** o gate de saída foi fechado pelo operador com "Liberar como proposta"; `entrega.md` existe e está como "ENTREGUE COMO PROPOSTA". As menções abaixo a Entrega e Handoff "em preparo" ou "sem artefato" refletem o momento do registro original.
+>
+> **Registro com a demanda aberta** (Entrega e Handoff em preparo; não há artefato dele na pasta). **Nenhum número de token por agente chegou a esta frente 2 e nada foi estimado.** A ordem de execução e o paralelismo abaixo vêm **do relato do Orquestrador no despacho**; os artefatos não registram ordem de execução, então **não consegui verificar a sequência em disco**. O que é verificável em disco está marcado.
+
+**Décima demanda.** Objeto: plataforma corporativa de EDA (Event Mesh), insumo é um PRD v1.0 "Draft para Revisão do ARB". Desenho congelado em **22 componentes, 10 atores, 13 externos, I-1..I-80**, DEC-1..19 (verificado em `documentacao-final.md` e `testes-qualidade.md`).
+
+**Paralelo vs sequencial (relato do Orquestrador, não verificado em disco):**
+- Entendimento → Desenho, **sequencial**.
+- Em paralelo após o Desenho: modelagem de dados, infraestrutura, testes, jornadas, pesquisa, ADRs, diagramas.
+- Depois: segurança, custo, observabilidade (frente 1).
+- Riscos **em paralelo** com a documentação final; comunicação depois; entrega e handoff **em preparo**.
+
+**Reativações por agente.** Contagens exatas informadas pelo Orquestrador (desenho, jornadas, modelagem, infraestrutura, segurança, observabilidade, testes, riscos, ADRs, diagramas foram reativados) **não são recuperáveis dos artefatos**; **não registro número que não consigo ler**. Evidência de revisão em disco:
+| Agente | Evidência verificada |
+|---|---|
+| Desenho | várias revisões datadas dentro de `desenho.md` (adições I-37..I-54 "revisão 2026-10-16" em resposta a G-1..G-10 de Jornadas, seções 4.2 pós-testes, 4.7, 4.8, 4.9). Contagem exata: **não verificada** |
+| Jornadas | **v2** (10 jornadas na v1, 15 na v2), realinhada a I-1..I-80 |
+| Testes e Qualidade | **revisão 3** (rev. 1 sobre c01..c18 / I-1..I-36; rev. 2 até I-75; rev. 3 sobre o desenho congelado) |
+| Observabilidade (frente 1) | **revisão 3** (rev. 2 a pedido do Orquestrador após testes rev. 2; rev. 3 por CF-10) |
+| Infraestrutura | cabeçalho "Revisão 2", mas o corpo cobre c19..c22 e `custo.md` cita "revisão 3". Incoerência de cabeçalho |
+| Estimativa de Custo | atualizada em seções 6A (infra rev. 2) e 6B (infra rev. 3) |
+| Segurança | cabeçalho ainda diz "Primeira versão", mas há extensão "rev. 2" (12.2, até 12.5) para I-61..I-80. Cabeçalho desatualizado |
+| Riscos | referencia testes rev. 2 e custo rev. 3. Número de execuções: **não verificado** |
+| Modelagem de Dados, ADRs, Diagramas | reativações **não verificáveis**. ADRs: 40 (053 a 092), todos Proposto. Diagramas: 38 de 40 passam no visual-check, **informado pelo Orquestrador** |
+
+**Especialistas sob demanda.**
+- **Dados e Analytics: acionamento recusado** (gatilho analítico não bateu), registrado em `modelagem-dados.md` e `documentacao-final.md`. **Divergência real em disco:** `entendimento.md` (seção 8) marcou o gatilho como "Sim" e `desenho.md` 10.2 diz "gatilho bate"; o especialista recusou mesmo assim. A recusa está registrada, mas **ninguém no time fechou a divergência de critério**. Os pontos dele foram cobertos dentro da modelagem, que declara que não decide a solução.
+- **IA/ML: não acionado**, corretamente (sem componente de IA/ML no PRD; NO-4 exclui streaming para BI/ML).
+
+**Rodadas de reconciliação.** Foram **muitas**, disparadas por mudanças no desenho; o desenho foi **congelado em I-80**. **Número exato de rodadas: não verificável** (sem log de rodadas nos artefatos). Evidência: a Documentação Final listou incoerências de versão entre insumos (ex.: `infraestrutura.md` com cabeçalho rev. 2 e corpo rev. 3; `modelagem-dados.md` ainda lendo I-53 como "instrução" quando o desenho fixa I-73), isto é, consumidores defasados em relação ao desenho.
+
+**O que isso sugere sobre o processo (leitura, não medição):**
+1. **O desenho cresceu enquanto os consumidores trabalhavam** (c01..c18/I-36 → c22/I-80). Os consumidores paralelizados partiram de um desenho que ainda não era o final e tiveram de ser reabertos, com cabeçalhos desatualizados. É o mesmo padrão de defasagem em cascata de `agente-de-cobranca-interno-oracle-e-ipnet`.
+2. **Paralelizar logo depois do Desenho funciona só se o desenho estiver estável.** Aqui ele não estava. Vale avaliar um critério de congelamento mínimo antes do fan-out, ou aceitar explicitamente as revisões como custo.
+3. **Congelar em I-80 foi o que encerrou o ciclo.** O congelamento explícito parece ser o mecanismo que faltava para parar as rodadas.
+4. **Cabeçalhos de revisão não acompanham o corpo** (Infraestrutura, Segurança). Dificulta saber qual versão cada documento realmente cobre.
+5. **Hook de 4ª rodada:** não encontrei no disco sinal de escalonamento por limite de rodadas. **Não verificado** se alguma dúvida chegou à 3ª rodada.
+
+**Estado no registro:** ADRs 053 a 092 todos **Proposto**, nenhum aprovado (conferido arquivo a arquivo). Entrega e Handoff sem artefato. Documentação Final declara "Frente 2 não executada" na seção de observabilidade (este registro).
+
+**Custo real em US$/R$:** pendente, a preencher por quem operou a sessão, **não estimado por este agente**. Ver `demandas/sol-4578-event-mesh-platform/custo-processamento.md`.
