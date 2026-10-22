@@ -444,3 +444,54 @@ Registradas porque a regra desta frente é registrar o apurado, não o narrado:
 **Estado no registro:** ADRs 053 a 092 todos **Proposto**, nenhum aprovado (conferido arquivo a arquivo). Entrega e Handoff sem artefato. Documentação Final declara "Frente 2 não executada" na seção de observabilidade (este registro).
 
 **Custo real em US$/R$:** pendente, a preencher por quem operou a sessão, **não estimado por este agente**. Ver `demandas/sol-4578-event-mesh-platform/custo-processamento.md`.
+
+---
+
+### 2026-10-16 — sol-4789-portal-vivo-cap
+
+> **Registro com a demanda aberta** (Entrega e Handoff em preparo; não há `entrega.md` na pasta). **Nenhum número de token, ferramenta ou duração por agente chegou a esta frente 2 e nada foi estimado.** A **ordem de execução, o paralelismo e as reativações** abaixo são **RELATO DO ORQUESTRADOR, NÃO VERIFICÁVEL EM DISCO**: os artefatos não registram ordem nem concorrência. O que é verificável está marcado como tal.
+
+**Décima primeira demanda.** Insumo: 1 imagem (foto de tela) e 1 instrução textual (`entendimento.md` v1). Objeto: portal de contas a pagar (CAP) com fila de escrituração SAP via RPA, recepção B2B (RosettaNet) e etapa de IA só no MVP3. ADRs 093 a 123 (**31**) em `adrs/`, **todos Proposto, nenhum aprovado** (conferido pela linha de status de cada arquivo).
+
+**Paralelo vs sequencial (relato do Orquestrador, não verificado em disco):**
+- Entendimento → Desenho, **sequencial**. O Desenho saiu como **v1 parcial** (trecho B2B aberto em P-04, confirmado no cabeçalho de `pesquisa.md`).
+- Em paralelo após o Desenho v1: modelagem de dados, infraestrutura, testes, jornadas, pesquisa, IA/ML, ADRs, diagramas.
+- Depois: estimativa de custo e observabilidade (frente 1), segurança.
+- Riscos e documentação final **em paralelo**; comunicação depois; entrega e handoff **em preparo**.
+- Reativações por agente: contagens informadas pelo Orquestrador **não são recuperáveis dos artefatos**; não registro número que não consigo ler.
+
+**Especialistas sob demanda.**
+- **IA/ML: acionado**, com gatilho que só vale para o **MVP3** (`especialista-ia-ml.md` seção 1: "Sim, mas só em parte"; **ainda não provado que a Análise Tributária precise de LLM**; não bloqueia o MVP1). Estado em disco: v1.1. Consistente com ADRs 109 a 112.
+- **Dados e Analytics: não acionado**, por sinal fraco (`entendimento.md` P-06 sem resposta; `desenho.md` linha 233; `documentacao-final.md` linha 580). Sem divergência de critério em disco, diferente de `sol-4578-event-mesh-platform`.
+
+**Versões em disco (verificado nos cabeçalhos):**
+| Artefato | Versão declarada |
+|---|---|
+| Desenho | **v1.3 congelado** (v1 parcial → v1.1/1.2: `c12`, i23..i32 → v1.3: i33, i34, partição lógica D-13) |
+| Entendimento | v1 (única) |
+| Testes e Qualidade | v2 / v2.1, sobre desenho v1.3 |
+| Observabilidade (frente 1) | v1.2 PARCIAL segundo `documentacao-final.md`; `riscos.md` cita v1.1; o cabeçalho de `observabilidade.md` cita insumos do desenho v1.3 |
+| Modelagem de Dados | v1.1, cabeçalho "alinhada ao desenho v1.2" |
+| Infraestrutura | v1.1 (linha 3 ainda diz "v1, PARCIAL") |
+| Segurança | v1 sobre desenho v1.2 (há referência a "seguranca.md v1.1" em `documentacao-final.md`, **não confirmada por mim**) |
+| Custo | v2 (seção 14 prevalece); valores **não reconferidos** contra desenho v1.3 (declarado em `documentacao-final.md`) |
+| IA/ML | v1.1 (sobre desenho v1 e pesquisa) |
+| Riscos | v1; cita ADRs 093 a 120, enquanto existem até 123 |
+| Pesquisa | v1 (sobre desenho v1) |
+| Jornadas | 8 jornadas, sobre desenho v1.3 |
+
+**Observações de processo verificáveis nos artefatos:**
+1. **O desenho cresceu enquanto os consumidores trabalhavam, e os consumidores paralelos foram reabertos** (v1 → v1.2 → v1.3). Resultado em disco: cabeçalhos defasados (modelagem "alinhada ao v1.2", infraestrutura com linha 3 em "v1", testes com linha 4 em "v1.2" e linha 6 em "v1.3"), listados em `documentacao-final.md` (pendência 7). Mesmo padrão de `sol-4578-event-mesh-platform` e `agente-de-cobranca-interno-oracle-e-ipnet`: fan-out sobre um desenho ainda não estável.
+2. **Colisão de numeração entre Desenho, Modelagem, Segurança e Pesquisa (N-xx, D-xx, H-xx), resolvida com prefixos MD- e SEG-.** Modelagem usa MD-D/MD-N/MD-R; Segurança usa SEG-S/Q/D/C e renumerou N-03(M)..N-06(M) para MD-N-01..04. Em H-xx, pesquisa, custo, IA e jornadas colidem (ex.: "H-2" é "BTP tem RNIF?" na pesquisa e "já existe FastConnect/VPN?" no custo). `documentacao-final.md` desambiguou na seção 17 e **sugeriu prefixar**; o prefixo de H-xx nesses cinco documentos **não está confirmado como feito**.
+3. **Deslize de redação do Orquestrador sobre o relay da outbox.** Declarado em `documentacao-final.md` (linha 41): a instrução à Observabilidade sobre onde ficaria o relay (a mensagem pedia "métricas de JDBC da fila, replicação e relay" para o `c12`, contra o desenho 3.2) divergia do desenho congelado. A Observabilidade seguiu o desenho (o `c12` NÃO inclui o relay). O relay segue sem dono (P-04e, D-R11, SPF-03). Segundo o relato do Orquestrador, a afirmação errada se propagou e causou **correções desnecessárias antes da retratação**; **esse trecho (propagação e correções) não está em disco**, só o deslize em si. Os artefatos dizem "sem efeito no desenho".
+4. **A pesquisa mudou premissas do diagrama.** Verificado em `pesquisa.md`: "B2B Integration do OCI" muito provavelmente significa provisionar uma instância do Oracle Integration (não existe recurso avulso simples; licença **NÃO CONFIRMADA**), e **não encontrei documentação SAP oficial de adaptador RNIF no Cloud Integration/BTP** (só no PI/PO on-premise; indício contra: KBA 3763260). Ainda não há decisão: o trecho B2B segue bloqueado por P-04 (`c11` fora dos totais de custo).
+5. **Cabeçalhos de revisão não acompanham o corpo** (Infraestrutura, Modelagem, Testes). Dificulta saber qual versão cada documento cobre.
+6. **Frente 2 não foi contínua.** `documentacao-final.md` e `observabilidade.md` declaram "frente 2 não executada" na emissão deles; este registro nasce com a cadeia já avançada.
+
+**Loops de dúvida / hook de 4ª rodada.** Não encontrei no disco sinal de escalonamento por limite de rodadas. **Não verificado** se alguma dúvida chegou à 3ª rodada. Os pedidos de decisão humana pendentes (P-04, P-05, P-06, N-01..N-07) estão abertos nos artefatos, sem valor inventado.
+
+**Estado no registro:** ADRs 093 a 123 todos **Proposto**. Entrega e Handoff sem artefato. Aprovação humana: nenhuma verificada.
+
+**Não consegui verificar:** ordem e concorrência reais, número de reativações por agente, propagação e correções do deslize do relay, se a numeração H-xx foi prefixada, tokens/ferramentas/duração, consumo do Orquestrador.
+
+**Custo real em US$/R$:** pendente, a preencher por quem operou a sessão, **não estimado por este agente**. Ver `demandas/sol-4789-portal-vivo-cap/custo-processamento.md`.
