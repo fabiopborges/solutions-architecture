@@ -20,6 +20,9 @@ docs/refactory/
 # Entrada de novas demandas
 input_demandas/
 
+# Log de consultas gerado pelos servidores MCP em servidor/, não versionar.
+servidor/consultas.log
+
 # Local de armazenamento das ADRs geradas por projeto. Regra deliberadamente
 # assimétrica: os ADRs 001 a 023 já estavam versionados quando esta linha
 # entrou e continuam publicados de propósito (são decisões da casa e de
