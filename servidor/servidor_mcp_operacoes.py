@@ -152,7 +152,7 @@ def _consultar_status_demanda(nome_demanda: str) -> dict:
 
 def _ajuda() -> dict:
     texto = (
-        "Time de agentes de Arquiteto de Soluções Júnior. Recebe uma demanda de "
+        "Time de agentes de Arquiteto de Soluções. Recebe uma demanda de "
         "arquitetura (SDR, pedido de negócio, etc.), orquestra as atividades da "
         "cadeia (mais especialistas sob demanda) e entrega um pacote de "
         "arquitetura completo e rastreável. Use '/arquiteto-solucoes <pedido>' "

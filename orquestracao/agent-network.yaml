@@ -12,7 +12,7 @@
 brokers:
   - id: broker-arquitetura-solucoes
     card:
-      name: "Broker do Arquiteto de Soluções Júnior"
+      name: "Broker do Arquiteto de Soluções"
       description: "Coordena a cadeia de 19 agentes de arquitetura de soluções, do entendimento da demanda à entrega, com paralelismo onde não há dependência."
       protocol_version: "0.3.0"
     spec:

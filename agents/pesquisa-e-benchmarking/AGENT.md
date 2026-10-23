@@ -26,7 +26,7 @@ agent_card:
   url: "N/A (subagente Claude Code)"
   version: "1.0.0"
   provider:
-    organization: "Arquiteto de Soluções Júnior"
+    organization: "Arquiteto de Soluções"
     url: "https://github.com/fabiopborges/solutions-architecture-jr"
   protocol_version: "0.3.0"
   capabilities:
