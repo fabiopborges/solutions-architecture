@@ -20,3 +20,24 @@ O documento de entendimento e escopo do agente [[agents/entendimento-e-escopo/AG
 
 ## Como é bem feito
 O próximo agente da cadeia consegue partir do desenho sem perguntar "por que esse componente está aqui?" ou "isso conecta com o quê?".
+
+agent_card:
+  name: "Desenho de Arquitetura"
+  description: "Recebe o documento de entendimento e escopo pronto e produz o primeiro desenho de arquitetura: bounded contexts (DDD), componentes, integrações, porquês e riscos."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "desenho-de-arquitetura"
+      name: "Desenho da Arquitetura de Solução"
+      description: "Modela o domínio com DDD a partir das capacidades de negócio do escopo e produz o desenho conceitual de componentes, integrações e riscos técnicos."
+      tags: ["ddd", "bounded-contexts", "arquitetura"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

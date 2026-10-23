@@ -29,3 +29,24 @@ Documentação Final decide QUE diagramas entram no pacote final e em que ordem 
 
 ## Como é bem feito
 Toda demanda tem diagramas C4 gerados a partir de uma única fonte de verdade (o spec), nunca dois diagramas divergentes desenhados à mão por agentes diferentes contando histórias ligeiramente diferentes.
+
+agent_card:
+  name: "Geração de Diagramas C4"
+  description: "Formaliza em diagramas C4 determinísticos (Contexto/Container e Sequência, via ArchiFy) a estrutura que outros agentes já decidiram — nunca decide bounded context, componente, integração ou jornada."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "geracao-diagramas"
+      name: "Geração de Diagramas C4"
+      description: "Traduz desenho.md/dados.md/sequências de jornadas em specs, deriva o candidato mínimo e conduz validate/deliver do ArchiFy até o HTML interativo final."
+      tags: ["c4", "diagramas", "archify"]
+  default_input_modes: ["text/markdown", "application/json"]
+  default_output_modes: ["text/html", "application/json"]

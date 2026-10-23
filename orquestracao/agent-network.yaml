@@ -1,0 +1,163 @@
+# MVP 2 — Grafo de Orquestração (Agent Broker)
+# Gerado a partir de README.md (seções "3. Containers — os 18 agentes e as
+# fronteiras de domínio" e "4. Uma demanda ponta a ponta, no tempo") e dos
+# campos "Depende de" / "É acionado por" / "Quando entra na cadeia" de cada
+# agents/<atividade>/AGENT.md. Nenhum nó ou aresta aqui corresponde a uma
+# transição que não esteja documentada nesses arquivos.
+#
+# NÃO VALIDADO: não foi executado/testado contra o Agent Broker real do
+# MuleSoft Agent Fabric. É a especificação legível do fluxo já existente,
+# não uma tentativa de rodar o grafo.
+
+brokers:
+  - id: broker-arquitetura-solucoes
+    card:
+      name: "Broker do Arquiteto de Soluções"
+      description: "Coordena a cadeia de 19 agentes de arquitetura de soluções, do entendimento da demanda à entrega, com paralelismo onde não há dependência."
+      protocol_version: "0.3.0"
+    spec:
+      # Não há LLM/instruções/ferramentas de broker declaradas em nenhum
+      # arquivo-fonte — o papel de "decidir ordem, paralelismo e segurar o
+      # gate" é hoje feito pelo agente Orquestrador (agents/orquestrador/AGENT.md),
+      # não por uma camada de broker separada. Modelamos o broker como o
+      # mesmo comportamento documentado do Orquestrador, sem inventar um LLM
+      # ou toolset de broker que não existe no repositório.
+      orchestrator_agent: "orquestrador"
+
+nodes:
+  - id: entendimento-e-escopo
+    type: probabilistic
+    description: "Recebe a demanda crua, confirma o nome da demanda e produz o documento de entendimento e escopo."
+  - id: desenho-de-arquitetura
+    type: probabilistic
+    description: "Modela DDD a partir das capacidades de negócio e produz o desenho de bounded contexts/componentes/integrações."
+  - id: modelagem-de-dados
+    type: probabilistic
+    description: "Define entidades, dono, fluxo entre serviços, retenção e sensibilidade a partir do desenho."
+  - id: infraestrutura-e-deployment
+    type: probabilistic
+    description: "Define hospedagem, provedor de cloud (agnóstico) e estratégia de escala/disponibilidade por componente."
+  - id: testes-e-qualidade
+    type: probabilistic
+    description: "Dá veredito de requisito não funcional x desenho, aponta pontos únicos de falha e valida integração com legado."
+  - id: jornadas-do-usuario
+    type: probabilistic
+    description: "Agrupa RFs aprovados em jornadas de usuário observáveis usando os componentes já decididos no desenho."
+  - id: pesquisa-e-benchmarking
+    type: probabilistic
+    description: "Compara tecnologias candidatas lado a lado quando a stack aprovada não resolve. Sob demanda."
+  - id: especialista-ia-ml
+    type: probabilistic
+    description: "Avalia necessidade de IA/ML e recomenda abordagem, incluindo a opção de não usar IA. Sob demanda."
+  - id: especialista-dados-analytics
+    type: probabilistic
+    description: "Avalia necessidade de plataforma de dados analíticos e recomenda opção. Sob demanda."
+  - id: trade-offs-e-adr
+    type: probabilistic
+    description: "Formaliza decisão de arquitetura importante como ADR revisável, com gate de aprovação humana próprio."
+  - id: seguranca-e-compliance
+    type: probabilistic
+    description: "Define autenticação/autorização por integração e tratamento por dado sensível, e aponta compliance aplicável."
+  - id: estimativa-de-custo
+    type: probabilistic
+    description: "Traduz a infraestrutura definida em custo por componente, comparando provedores viáveis."
+  - id: observabilidade-e-telemetria
+    type: probabilistic
+    description: "Define métricas/trace/alertas da solução (frente 1) e mantém o registro contínuo de execução do próprio time de agentes (frente 2)."
+  - id: documentacao-final
+    type: deterministic
+    description: "Consolida os documentos de todos os ramos num pacote final único, seguindo esqueleto fixo de template — não decide conteúdo novo."
+  - id: riscos-e-mitigacao
+    type: probabilistic
+    description: "Herda riscos técnicos, adiciona riscos de negócio/projeto, prioriza e garante mitigação ou aceite explícito."
+  - id: comunicacao-stakeholders
+    type: probabilistic
+    description: "Traduz o pacote final e o plano de riscos para linguagem sem jargão, terminando com pergunta de aprovação."
+  - id: entrega-e-handoff
+    type: probabilistic
+    description: "Organiza pacote final e ADRs para o time de desenvolvimento, quebra em itens de backlog."
+  - id: geracao-diagramas
+    type: deterministic
+    description: "Traduz o que já foi decidido (desenho.md, dados.md, jornadas) em diagramas C4 determinísticos — nunca decide arquitetura."
+  - id: orquestrador
+    type: deterministic
+    description: "Decide ordem/paralelismo dos agentes de atividade, trata dúvida entre agentes até 3 rodadas, e segura o gate de saída."
+  - id: gate-de-saida
+    type: deterministic
+    description: "Checklist fixo de 4 itens (suposições escritas, dúvidas resolvidas, pacote final presente, aprovação humana) antes de liberar como entregue."
+
+triggers:
+  - id: disparo-da-demanda
+    type: a2a
+    description: "A demanda crua chega e o Orquestrador despacha Entendimento e Escopo."
+    target: entendimento-e-escopo
+
+edges:
+  # Cadeia inicial sequencial
+  - { from: entendimento-e-escopo, to: desenho-de-arquitetura, type: blocking }
+
+  # A partir do Desenho: quatro ramos incondicionais em paralelo
+  - { from: desenho-de-arquitetura, to: modelagem-de-dados, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: infraestrutura-e-deployment, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: testes-e-qualidade, type: non-blocking }
+  - { from: desenho-de-arquitetura, to: jornadas-do-usuario, type: non-blocking }
+
+  # Geração de Diagramas C4, acionado assim que a estrutura do desenho fecha
+  - { from: desenho-de-arquitetura, to: geracao-diagramas, type: non-blocking }
+
+  # Especialistas e Pesquisa, sob demanda (condicionais — só disparam se o gatilho bater)
+  - { from: desenho-de-arquitetura, to: pesquisa-e-benchmarking, type: non-blocking, condition: "tecnologia não resolvida pela stack aprovada" }
+  - { from: desenho-de-arquitetura, to: especialista-ia-ml, type: non-blocking, condition: "decisão de seleção/treino/integração de modelo de IA/ML" }
+  - { from: desenho-de-arquitetura, to: especialista-dados-analytics, type: non-blocking, condition: "decisão de plataforma de dados analíticos" }
+  - { from: modelagem-de-dados, to: especialista-dados-analytics, type: non-blocking, condition: "modelagem encontra necessidade de plataforma analítica durante o próprio trabalho" }
+  - { from: especialista-ia-ml, to: especialista-dados-analytics, type: non-blocking, condition: "pipeline de treino precisa de plataforma de dados por trás" }
+
+  # Trade-offs e ADR, acionado no momento de qualquer decisão importante
+  - { from: desenho-de-arquitetura, to: trade-offs-e-adr, type: non-blocking }
+  - { from: pesquisa-e-benchmarking, to: trade-offs-e-adr, type: non-blocking }
+  - { from: especialista-ia-ml, to: trade-offs-e-adr, type: non-blocking }
+  - { from: especialista-dados-analytics, to: trade-offs-e-adr, type: non-blocking }
+
+  # Segurança e Compliance espera Desenho + Modelagem de Dados
+  - { from: desenho-de-arquitetura, to: seguranca-e-compliance, type: blocking }
+  - { from: modelagem-de-dados, to: seguranca-e-compliance, type: blocking }
+
+  # Estimativa de Custo depende diretamente de Infraestrutura (não roda em paralelo com ele)
+  - { from: infraestrutura-e-deployment, to: estimativa-de-custo, type: blocking }
+
+  # Observabilidade frente 1 depende de Desenho e, quando existir, Infraestrutura;
+  # roda em paralelo com Estimativa de Custo e Segurança e Compliance
+  - { from: desenho-de-arquitetura, to: observabilidade-e-telemetria, type: blocking }
+  - { from: infraestrutura-e-deployment, to: observabilidade-e-telemetria, type: blocking }
+
+  # Documentação Final: sincronização total (espera todos os ramos técnicos)
+  - { from: modelagem-de-dados, to: documentacao-final, type: blocking }
+  - { from: infraestrutura-e-deployment, to: documentacao-final, type: blocking }
+  - { from: testes-e-qualidade, to: documentacao-final, type: blocking }
+  - { from: jornadas-do-usuario, to: documentacao-final, type: blocking }
+  - { from: seguranca-e-compliance, to: documentacao-final, type: blocking }
+  - { from: estimativa-de-custo, to: documentacao-final, type: blocking }
+  - { from: observabilidade-e-telemetria, to: documentacao-final, type: blocking }
+
+  # Documentação Final aciona Geração de Diagramas C4 de novo, para consolidar o pacote
+  - { from: documentacao-final, to: geracao-diagramas, type: blocking }
+
+  # Riscos e Mitigação roda em paralelo com Documentação Final, espera Desenho + Testes
+  - { from: desenho-de-arquitetura, to: riscos-e-mitigacao, type: blocking }
+  - { from: testes-e-qualidade, to: riscos-e-mitigacao, type: blocking }
+
+  # Comunicação com Stakeholders espera Documentação Final + Riscos e Mitigação
+  - { from: documentacao-final, to: comunicacao-stakeholders, type: blocking }
+  - { from: riscos-e-mitigacao, to: comunicacao-stakeholders, type: blocking }
+
+  # Entrega e Handoff prepara assim que Comunicação termina
+  - { from: comunicacao-stakeholders, to: entrega-e-handoff, type: blocking }
+
+  # Entrega e Handoff só libera "entregue" depois do gate de saída confirmado
+  - { from: entrega-e-handoff, to: gate-de-saida, type: blocking }
+
+# O Orquestrador não participa das arestas acima como origem/destino de
+# artefato: seu papel documentado é decidir a ordem/paralelismo em si (as
+# arestas listadas), tratar dúvida entre agentes (limite de 3 rodadas antes
+# de escalar), e ser o dono do nó `gate-de-saida`. Modelá-lo como origem de
+# cada aresta duplicaria a mesma informação sem base textual adicional.

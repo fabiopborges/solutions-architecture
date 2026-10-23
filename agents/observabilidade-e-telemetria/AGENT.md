@@ -24,3 +24,24 @@ Este agente nunca inventa ou estima quanto uma demanda custou em tokens/processa
 
 ## Como é bem feito
 Dá para responder "o que acorda alguém se isso falhar em produção?" só com o documento da frente 1, e "quanto essa demanda custou no total?" com um número real (mesmo que ainda sem saber qual atividade pesou mais) só com o registro da frente 2.
+
+agent_card:
+  name: "Observabilidade e Telemetria"
+  description: "Define o que a solução entregue vai medir em produção (frente 1) e mantém o retrato de quanto o próprio time de agentes gastou por demanda (frente 2)."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "observabilidade-e-telemetria"
+      name: "Plano de Observabilidade, Telemetria e Métricas"
+      description: "Define métricas por componente, trace distribuído e limites de alerta para a solução entregue, e mantém o registro contínuo do que o próprio time de agentes executou e gastou."
+      tags: ["observabilidade", "telemetria", "trace-distribuido"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

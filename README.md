@@ -67,6 +67,7 @@ Seja você arquiteto júnior, pleno, sênior ou especialista, a cadeira de decis
 - [Os 18 agentes](#os-18-agentes)
 - [Regras e governança](#regras-e-governança)
 - [Estado atual](#estado-atual)
+- [Estudo de aderência ao MuleSoft Agent Fabric](#estudo-de-aderência-ao-mulesoft-agent-fabric)
 - [Como estender (adicionar um agente novo)](#como-estender-adicionar-um-agente-novo)
 - [Créditos e agradecimentos](#créditos-e-agradecimentos)
 - [Licença](#licença)
@@ -486,6 +487,23 @@ Veja [`memory.md`](memory.md) para o histórico completo de decisões. Resumo ho
 - **Dos dois especialistas sob demanda, só o de IA/ML já foi acionado de verdade** (`demandas/plataforma-ia-corporativa-v1/`, confirmando que o gatilho dispara quando deveria, depois de três demandas seguidas confirmando só o caminho de não disparar à toa). **O Especialista em Dados e Analytics nunca foi acionado** — nenhuma demanda real até agora teve decisão de plataforma analítica de verdade. Por isso ele não aparece em nenhuma das vistas geradas: nenhuma jornada real o exercita.
 - `tools.md` lista três conexões externas úteis, nenhuma ligada ainda.
 - ADRs 001 a 022 registrados em `adrs/`, com aprovação humana explícita registrada em cada um antes de valer como oficial.
+- **Estudo de aderência ao MuleSoft Agent Fabric (exploratório, não integrado à cadeia real):** `registry/agent-cards/`, `orquestracao/`, `governanca/`, `telemetria/interacoes.jsonl` e `servidor/` são artefatos de referência gerados a partir do que já existe (`agents/*/AGENT.md`, `README.md`, `rules/`, `substrate/`, `telemetria-agentes.md`), preparando o repositório para uma eventual migração — nunca decisão de arquitetura nova. Nenhum agente real consome esses arquivos hoje; `tools.md` documenta o que cada um cobre e a lacuna que falta para virar integração de verdade.
+
+## Estudo de aderência ao MuleSoft Agent Fabric
+
+Preparação incremental (MVP a MVP) para uma eventual migração futura, documentada em `docs/refactory/aderencia-agent-fabric-mulesoft/` (local, não versionado). Cada artefato abaixo é gerado por extração do que já existe no repositório — nunca uma decisão de arquitetura nova — e nenhum é consumido pela cadeia real hoje.
+
+| Artefato | O que é | Gerado por |
+| --- | --- | --- |
+| `registry/agent-cards/*.json` | Agent Card (padrão A2A) por agente, 19 no total | `scripts/gerar_agent_cards.py`, lendo o bloco `agent_card` anexado a cada `AGENT.md` |
+| `orquestracao/agent-network.yaml` + `.agent` | Grafo de orquestração (nós, arestas, tipo probabilístico/determinístico) | Extraído de `README.md` (seção 3) e dos `AGENT.md` |
+| `governanca/policies.yaml` | Mapeamento de `rules/never.md`/`rules/always.md` para políticas técnicas de gateway | Extraído das regras reais; regra sem política correspondente fica marcada "não aplicável", nunca inventada |
+| `governanca/identidade-delegada.md` | Modelo de identidade delegada (OBO / In-Task Authorization Code) para o fluxo real | Extraído do papel da Pessoa Operadora e do grafo de orquestração |
+| `telemetria/interacoes.jsonl` + `scripts/coletar_telemetria.py` | Log de interações por demanda, formato que um Agent Visualizer consumiria | Extraído de uma entrada real de `telemetria-agentes.md` |
+| `servidor/servidor_mcp.py` | Servidor MCP local que expõe `substrate/compendium.md`/`adrs/` como três ferramentas de consulta | Lê o substrato existente, não o altera |
+| `servidor/servidor_mcp_operacoes.py` | MCP Bridge para os comandos reais de `.claude/skills/arquiteto-solucoes/SKILL.md` (status, ajuda; início de demanda fica desativado por padrão) | Extraído do `argument-hint` real da skill |
+
+Nenhum desses arquivos tem acesso à ferramenta `Task` do Claude Code — eles não despacham subagente nenhum, só documentam/consultam. Ver `tools.md` para as limitações conhecidas de cada um.
 
 ## Como estender (adicionar um agente novo)
 

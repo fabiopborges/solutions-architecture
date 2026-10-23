@@ -22,3 +22,24 @@ Não preenche a lacuna com suposição. Sinaliza ao [[agents/orquestrador/AGENT]
 
 ## Como é bem feito
 Qualquer pessoa do time lê o pacote final e entende a solução de ponta a ponta sem precisar abrir os documentos de origem, mas sabe onde estão se precisar.
+
+agent_card:
+  name: "Documentação Final"
+  description: "Ponto de convergência da cadeia. Junta o que todos os outros agentes produziram num pacote final único, com os três diagramas (componentes, dados, infraestrutura)."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "documentacao-final"
+      name: "Documentação Final e Diagramas"
+      description: "Consolida os documentos de todos os ramos paralelos e os diagramas C4 num único pacote final, citando a origem de cada seção."
+      tags: ["sincronizacao-total", "pacote-final", "diagramas"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

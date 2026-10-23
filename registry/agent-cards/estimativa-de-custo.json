@@ -1,0 +1,34 @@
+{
+  "name": "Estimativa de Custo",
+  "description": "Traduz a definição de infraestrutura em custo por componente, compara provedores de cloud quando mais de um é viável, e soma licenciamento/terceiros.",
+  "url": "N/A (subagente Claude Code)",
+  "version": "1.0.0",
+  "provider": {
+    "organization": "Arquiteto de Soluções",
+    "url": "https://github.com/fabiopborges/solutions-architecture-jr"
+  },
+  "protocol_version": "0.3.0",
+  "capabilities": {
+    "streaming": false,
+    "push_notifications": false,
+    "state_transition_history": false
+  },
+  "skills": [
+    {
+      "id": "estimativa-de-custo",
+      "name": "Estimativa de Custo",
+      "description": "Estima custo por componente a partir da infraestrutura definida, compara provedores viáveis e separa licenciamento/terceiros do custo de infraestrutura pura.",
+      "tags": [
+        "custo",
+        "comparacao-de-provedores",
+        "licenciamento"
+      ]
+    }
+  ],
+  "default_input_modes": [
+    "text/markdown"
+  ],
+  "default_output_modes": [
+    "text/markdown"
+  ]
+}

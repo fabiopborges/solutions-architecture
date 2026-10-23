@@ -29,3 +29,24 @@ Riscos de explicabilidade ou viés que afetam compliance vão para [[agents/segu
 
 ## Como é bem feito
 Toda decisão de IA/ML que passou por ele tem julgamento especializado real por trás, incluindo quando a resposta certa é não usar IA, e nenhuma demanda sem essa necessidade foi atrasada esperando esse agente à toa.
+
+agent_card:
+  name: "Especialista em IA e Machine Learning"
+  description: "Sob demanda, nunca por padrão. Colabora com julgamento mais profundo em decisões de IA/ML (seleção, treino, fine-tuning, integração de modelo, incluindo LLM/genAI), incluindo a autoridade de recomendar não usar IA."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "especialista-ia-ml"
+      name: "Especialista em IA e Machine Learning"
+      description: "Avalia se IA/ML é de fato necessário, recomenda construir vs. serviço gerenciado, e aponta riscos específicos do domínio (viés, explicabilidade, degradação, custo de inferência)."
+      tags: ["ia-ml", "llm-genai", "sob-demanda"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

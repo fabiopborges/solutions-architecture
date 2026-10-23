@@ -20,3 +20,24 @@ Depois da entrega, dúvidas do time de desenvolvimento chegam aqui primeiro. Est
 
 ## Como é bem feito
 O time de desenvolvimento começa a construir sem reabrir cada documento do zero, sabe por onde começar no backlog, e sabe a quem perguntar em cada área quando os agentes já não estão mais ativos na demanda.
+
+agent_card:
+  name: "Entrega e Handoff"
+  description: "Última atividade da cadeia. Organiza o pacote final e os ADRs em algo acionável para o time de desenvolvimento, quebra em itens de backlog, e mantém a tabela de quem responde o quê."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "entrega-e-handoff"
+      name: "Entrega Final e Handoff"
+      description: "Organiza pacote final e ADRs, quebra em itens de backlog e monta a tabela de referência por área; só libera como entregue após o gate de aprovação humana."
+      tags: ["handoff", "backlog", "gate-de-aprovacao-humana"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

@@ -28,3 +28,24 @@ Devolve ao agente que acionou, sem produzir um documento completo, dizendo que a
 
 ## Como é bem feito
 A escolha de plataforma analítica tem um porquê real por trás, e nenhuma demanda sem necessidade analítica foi atrasada esperando esse agente à toa.
+
+agent_card:
+  name: "Especialista em Dados e Analytics"
+  description: "Sob demanda, nunca por padrão. Colabora com julgamento mais profundo em decisões de plataforma de dados analíticos (data warehouse, data lake, pipeline de ingestão, BI)."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "especialista-dados-analytics"
+      name: "Especialista em Dados e Analytics"
+      description: "Avalia se a demanda de fato precisa de plataforma de dados analíticos e recomenda a opção contra volume, latência e critérios de negócio de cloud."
+      tags: ["plataforma-analitica", "data-warehouse", "sob-demanda"]
+  default_input_modes: ["text/markdown"]
+  default_output_modes: ["text/markdown"]

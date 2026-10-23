@@ -17,3 +17,24 @@ Qualquer agente das atividades seguintes (desenho, dados, segurança, infraestru
 
 ## Como é bem feito
 O [[agents/desenho-de-arquitetura/AGENT]] consegue começar a trabalhar, inclusive identificar os bounded contexts (DDD) direto do mapa de capacidades de negócio, sem voltar para perguntar o que já deveria estar no documento.
+
+agent_card:
+  name: "Entendimento e Escopo"
+  description: "Recebe a demanda crua e produz o documento de entendimento e escopo que todo o resto do time depende."
+  url: "N/A (subagente Claude Code)"
+  version: "1.0.0"
+  provider:
+    organization: "Arquiteto de Soluções"
+    url: "https://github.com/fabiopborges/solutions-architecture-jr"
+  protocol_version: "0.3.0"
+  capabilities:
+    streaming: false
+    push_notifications: false
+    state_transition_history: false
+  skills:
+    - id: "entendimento-e-escopo"
+      name: "Entendimento da Demanda e Escopo"
+      description: "Mapeia capacidades de negócio (TOGAF) e requisitos a partir do pedido cru, produzindo o documento de entendimento e escopo que abre a cadeia."
+      tags: ["togaf", "capacidades-de-negocio", "escopo"]
+  default_input_modes: ["text/plain"]
+  default_output_modes: ["text/markdown"]
