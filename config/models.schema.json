@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "config/models.schema.json",
+  "title": "Catálogo de modelos e roteamento por agente",
+  "description": "Schema de config/models.yaml (seção 5.5 de docs/multi-llm-provider/especificacao.md). Rascunho da Fase 0: nada aqui foi executado contra provedor real.",
+  "type": "object",
+  "required": ["versao", "modelos", "roteamento", "resiliencia"],
+  "additionalProperties": false,
+  "properties": {
+    "versao": { "const": 1 },
+    "modelos": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
+      "additionalProperties": { "$ref": "#/$defs/modelo" }
+    },
+    "roteamento": {
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9][a-z0-9-]*$" },
+      "additionalProperties": { "$ref": "#/$defs/rota" }
+    },
+    "resiliencia": { "$ref": "#/$defs/resiliencia" }
+  },
+  "$defs": {
+    "provedor": {
+      "enum": ["anthropic", "openai", "gemini", "deepseek", "grok", "local", "fake"]
+    },
+    "capacidade": {
+      "enum": ["tool_use", "saida_estruturada", "streaming", "visao", "raciocinio_explicito"]
+    },
+    "modelo": {
+      "type": "object",
+      "required": ["provedor", "id", "capacidades", "politica_dados"],
+      "additionalProperties": false,
+      "properties": {
+        "provedor": { "$ref": "#/$defs/provedor" },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Id oficial vigente do modelo, copiado da doc do provedor no dia do preenchimento."
+        },
+        "capacidades": {
+          "type": "object",
+          "required": ["janela_contexto"],
+          "additionalProperties": false,
+          "properties": {
+            "janela_contexto": { "type": "integer", "minimum": 1 },
+            "tool_use": { "type": "boolean" },
+            "saida_estruturada": { "type": "boolean" },
+            "streaming": { "type": "boolean" },
+            "visao": { "type": "boolean" },
+            "raciocinio_explicito": { "type": "boolean" }
+          }
+        },
+        "preco": {
+          "type": "object",
+          "required": ["entrada_por_mtok", "saida_por_mtok", "fonte", "verificado_em"],
+          "additionalProperties": false,
+          "description": "Obrigatório para provedor hospedado; omitido para local e fake. Sem preço, custo_calculado fica nulo na telemetria.",
+          "properties": {
+            "entrada_por_mtok": { "type": "number", "minimum": 0 },
+            "saida_por_mtok": { "type": "number", "minimum": 0 },
+            "cache_por_mtok": { "type": "number", "minimum": 0 },
+            "moeda": { "type": "string", "default": "USD" },
+            "fonte": { "type": "string", "format": "uri" },
+            "verificado_em": { "type": "string", "format": "date" }
+          }
+        },
+        "politica_dados": {
+          "type": "object",
+          "required": ["classificacao"],
+          "additionalProperties": false,
+          "properties": {
+            "classificacao": {
+              "enum": ["aprovado", "restrito", "proibido_dado_real"],
+              "description": "aprovado: aceita dado real de demanda. restrito: só mediante exceção registrada. proibido_dado_real: só dado sintético. Decisão humana, registrada em ADR."
+            },
+            "adr": { "type": "string", "description": "Referência do ADR que fundamenta a classificação." }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "provedor": { "enum": ["anthropic", "openai", "gemini", "deepseek", "grok"] } } },
+          "then": { "required": ["preco"] }
+        }
+      ]
+    },
+    "rota": {
+      "type": "object",
+      "required": ["primario"],
+      "additionalProperties": false,
+      "properties": {
+        "primario": { "type": "string" },
+        "fallback": { "type": "array", "items": { "type": "string" }, "uniqueItems": true, "default": [] },
+        "exige": { "type": "array", "items": { "$ref": "#/$defs/capacidade" }, "uniqueItems": true, "default": [] }
+      }
+    },
+    "resiliencia": {
+      "type": "object",
+      "required": ["retries", "cooldown_s", "falhas_para_abrir_circuito"],
+      "additionalProperties": false,
+      "properties": {
+        "retries": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "RATE_LIMIT": { "type": "integer", "minimum": 0 },
+            "TIMEOUT": { "type": "integer", "minimum": 0 },
+            "INDISPONIVEL": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "cooldown_s": { "type": "integer", "minimum": 0 },
+        "falhas_para_abrir_circuito": { "type": "integer", "minimum": 1 }
+      }
+    }
+  },
+  "$comment": "Validações que JSON Schema não expressa e o carregador do runtime deve aplicar: (1) todo alias em roteamento.primario e roteamento.fallback existe em modelos; (2) toda capacidade em roteamento.exige é true no modelo primário e em cada fallback, ou o carregamento falha; (3) toda chave de roteamento é um agente existente em agents/; (4) nenhum agente fica sem rota."
+}

@@ -1,0 +1,43 @@
+# EXEMPLO de config/models.yaml, para validar o schema (config/models.schema.json).
+# Não é configuração real: ids, preços e classificações de dados são PLACEHOLDERS
+# e nenhum modelo aqui foi consultado na doc oficial. Preencher na implementação.
+versao: 1
+
+modelos:
+  teste-fake:
+    provedor: fake
+    id: respostas-gravadas
+    capacidades: {janela_contexto: 100000, tool_use: true, saida_estruturada: true}
+    politica_dados: {classificacao: aprovado}
+
+  exemplo-hospedado:
+    provedor: anthropic
+    id: PREENCHER-ID-OFICIAL
+    capacidades: {janela_contexto: 1, tool_use: true, saida_estruturada: true}
+    preco:
+      entrada_por_mtok: 0
+      saida_por_mtok: 0
+      fonte: https://exemplo.invalid/precos
+      verificado_em: "2000-01-01"  # entre aspas: sem elas o YAML vira objeto date e o schema (string) rejeita
+    politica_dados: {classificacao: restrito}
+
+  exemplo-local:
+    provedor: local
+    id: PREENCHER-ID-LOCAL
+    capacidades: {janela_contexto: 1, tool_use: false, saida_estruturada: false}
+    politica_dados: {classificacao: aprovado}
+
+roteamento:
+  entendimento-e-escopo:
+    primario: exemplo-hospedado
+    fallback: [exemplo-local]
+    exige: []
+  pesquisa-e-benchmarking:
+    primario: exemplo-hospedado
+    fallback: []
+    exige: [tool_use]
+
+resiliencia:
+  retries: {RATE_LIMIT: 3, TIMEOUT: 2, INDISPONIVEL: 2}
+  cooldown_s: 30
+  falhas_para_abrir_circuito: 3
