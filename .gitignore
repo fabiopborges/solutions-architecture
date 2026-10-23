@@ -30,3 +30,6 @@ input_demandas/
 # `.gitignore` não desversiona o que já está rastreado, então um `-f` aqui é
 # irreversível na prática (o valor fica no histórico público).
 adrs/
+
+# Log de consultas gerado pelos servidores MCP em servidor/, não versionar.
+servidor/consultas.log
