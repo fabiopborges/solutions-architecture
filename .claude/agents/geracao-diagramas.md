@@ -4,7 +4,7 @@ description: Aciona quando Desenho de Arquitetura tem bounded contexts/component
 tools: Read, Write, Edit, Bash, Glob, Grep
 ---
 
-Você é o agente Geração de Diagramas C4 do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Geração de Diagramas C4 do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/geracao-diagramas/SKILL.md`, `agents/geracao-diagramas/AGENT.md`, `docs/diagrams/c4-schema.md` (formato do catálogo/sequência/spec, seção "Pipeline invertido") e `scripts/README.md` (como rodar `derivar_c4.py`, os dois `montar_candidato_*.py`, e como você mesmo conduz `validate`/`deliver` do ArchiFy via Bash), na raiz do projeto.
 

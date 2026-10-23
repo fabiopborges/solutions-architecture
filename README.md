@@ -1,8 +1,8 @@
 <div align="center">
 
-# Arquiteto de Soluções Junior IA
+# Arquiteto de Soluções IA
 
-**Um time de agentes de IA que trabalha como um Arquiteto de Soluções Júnior.**
+**Um time de agentes de IA que trabalha como um Arquiteto de Soluções.**
 Uma atividade, um agente, um critério de pronto — e nada sai como "entregue" sem uma pessoa aprovar.
 
 [![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE.md)
@@ -14,17 +14,13 @@ Uma atividade, um agente, um critério de pronto — e nada sai como "entregue" 
 
 Construído sobre o [Claude Code](https://claude.com/claude-code). Em vez de um prompt genérico tentando fazer tudo de uma vez, cada atividade real do trabalho de arquitetura vira um agente próprio, com escopo estreito, uma skill dedicada e um critério claro de "isso está bem feito".
 
-## Por que "Júnior", se as decisões são grandes
+## Por que a palavra final é sempre humana
 
-O nome engana de propósito — então vale desfazer o mal-entendido na primeira tela.
-
-**"Júnior" não é o tamanho do problema. É o tamanho da autoridade.**
-
-O trabalho que este time faz não é júnior: ele modela capacidades de negócio com TOGAF, traduz em bounded contexts com DDD, escolhe provedor de cloud por critério de negócio, define tratamento de dado sensível e requisito de compliance, dimensiona custo por componente, aponta pontos únicos de falha e formaliza cada escolha como ADR com alternativas descartadas. São decisões que sustentam ou afundam um projeto — e o time as toma com fundamento escrito, não com opinião.
+Este time toma decisões grandes: modela capacidades de negócio com TOGAF, traduz em bounded contexts com DDD, escolhe provedor de cloud por critério de negócio, define tratamento de dado sensível e requisito de compliance, dimensiona custo por componente, aponta pontos únicos de falha e formaliza cada escolha como ADR com alternativas descartadas. São decisões que sustentam ou afundam um projeto — e o time as toma com fundamento escrito, não com opinião.
 
 O que ele **nunca** tem é a palavra final.
 
-Todo agente aqui trabalha como um arquiteto júnior competente trabalha num time saudável: leva a análise até o fim, defende uma recomendação, expõe o que assumiu e o que abriu mão — e **leva para um humano assinar**. Não porque a análise seja fraca, mas porque a responsabilidade não é delegável. Quem responde pela decisão é quem tem nome, cargo e pele no jogo.
+Todo agente aqui leva a análise até o fim, defende uma recomendação, expõe o que assumiu e o que abriu mão — e **leva para um humano assinar**. Não porque a análise seja fraca, mas porque a responsabilidade não é delegável. Quem responde pela decisão é quem tem nome, cargo e pele no jogo.
 
 E isso não é uma promessa de comportamento, é mecanismo:
 
@@ -34,7 +30,7 @@ E isso não é uma promessa de comportamento, é mecanismo:
 - Risco não some por conveniência: cada um sai com mitigação **ou aceite explícito** de alguém.
 - Dúvida entre agentes que não fecha em três rodadas escala para revisão humana na quarta.
 
-**O selo de júnior é sobre você, não sobre o agente.** Seja você júnior, pleno, sênior ou especialista, a cadeira de decisão continua sendo a sua — o time entrega tudo pronto para você julgar, e nada pronto para dispensar o seu julgamento. Um arquiteto sênior ganha alavancagem; um júnior ganha um time que mostra o raciocínio inteiro em vez de um veredito para copiar.
+Seja você arquiteto júnior, pleno, sênior ou especialista, a cadeira de decisão continua sendo a sua — o time entrega tudo pronto para você julgar, e nada pronto para dispensar o seu julgamento. Um arquiteto sênior ganha alavancagem; um iniciante ganha um time que mostra o raciocínio inteiro em vez de um veredito para copiar.
 
 É o oposto de "IA que decide por você": é IA que faz o trabalho inteiro **para que a decisão seja sua, e mais bem informada**.
 
@@ -47,15 +43,15 @@ E isso não é uma promessa de comportamento, é mecanismo:
 
 **Conceitos**
 
-- [Por que "Júnior", se as decisões são grandes](#por-que-júnior-se-as-decisões-são-grandes)
+- [Por que a palavra final é sempre humana](#por-que-a-palavra-final-é-sempre-humana)
 - [Por que isto existe](#por-que-isto-existe)
 - [Ideia central em 30 segundos](#ideia-central-em-30-segundos)
 - [Glossário rápido](#glossário-rápido)
 
 **As vistas da arquitetura**
 
-- [1. As seis camadas do Arquiteto de Soluções Junior IA](#1-as-seis-camadas-do-arquiteto-de-soluções-junior-ia)
-- [2. Contexto — quem conversa com o Arquiteto de Soluções Junior IA](#2-contexto--quem-conversa-com-o-arquiteto-de-soluções-junior-ia)
+- [1. As seis camadas do Arquiteto de Soluções IA](#1-as-seis-camadas-do-arquiteto-de-soluções-ia)
+- [2. Contexto — quem conversa com o Arquiteto de Soluções IA](#2-contexto--quem-conversa-com-o-arquiteto-de-soluções-ia)
 - [3. Containers — os 18 agentes e as fronteiras de domínio](#3-containers--os-18-agentes-e-as-fronteiras-de-domínio)
 - [4. Uma demanda ponta a ponta, no tempo](#4-uma-demanda-ponta-a-ponta-no-tempo)
 - [5. Fluxo de dados entre os agentes](#5-fluxo-de-dados-entre-os-agentes)
@@ -105,7 +101,7 @@ Demanda crua (SDR, pedido de negócio)
   Gate de saída (aprovação humana obrigatória) → Entregue
 ```
 
-Se você já usou um time real de arquitetura, a analogia é direta: em vez de um arquiteto sênior sozinho tentando cobrir todas as frentes, você tem uma pessoa júnior por atividade, cada uma boa numa coisa só, que sabe pedir ajuda para o colega certo em vez de chutar.
+Se você já usou um time real de arquitetura, a analogia é direta: em vez de um arquiteto sênior sozinho tentando cobrir todas as frentes, você tem uma pessoa por atividade, cada uma boa numa coisa só, que sabe pedir ajuda para o colega certo em vez de chutar.
 
 ## Glossário rápido
 
@@ -124,26 +120,26 @@ Se você já usou um time real de arquitetura, a analogia é direta: em vez de u
 
 ## As vistas da arquitetura
 
-Sete vistas complementares da mesma coisa, do conceito ao disco. **As vistas 2 a 6 não foram desenhadas à mão**: são a saída do agente [Geração de Diagramas C4](agents/geracao-diagramas/AGENT.md) rodando sobre este próprio repositório como demanda — o Arquiteto de Soluções Junior IA aplicado a si mesmo, com `desenho.md`, `dados.md` e as jornadas do próprio time como fonte. Os specs que geraram cada imagem estão em [`docs/diagrams/archify/`](docs/diagrams/archify/).
+Sete vistas complementares da mesma coisa, do conceito ao disco. **As vistas 2 a 6 não foram desenhadas à mão**: são a saída do agente [Geração de Diagramas C4](agents/geracao-diagramas/AGENT.md) rodando sobre este próprio repositório como demanda — o Arquiteto de Soluções IA aplicado a si mesmo, com `desenho.md`, `dados.md` e as jornadas do próprio time como fonte. Os specs que geraram cada imagem estão em [`docs/diagrams/archify/`](docs/diagrams/archify/).
 
 > [!TIP]
 > Todo diagrama abaixo é clicável — abra em tamanho real, alguns são largos. Os SVGs seguem o tema claro/escuro do seu sistema.
 
-### 1. As seis camadas do Arquiteto de Soluções Junior IA
+### 1. As seis camadas do Arquiteto de Soluções IA
 
-O **Arquiteto de Soluções Junior IA** é montado em seis camadas, de baixo para cima: cada camada depende da que veio antes.
+O **Arquiteto de Soluções IA** é montado em seis camadas, de baixo para cima: cada camada depende da que veio antes.
 
-[![As seis camadas do Arquiteto de Soluções Junior IA, da Identidade até os Agentes](docs/diagrams/01-camadas.svg)](docs/diagrams/01-camadas.svg)
+[![As seis camadas do Arquiteto de Soluções IA, da Identidade até os Agentes](docs/diagrams/01-camadas.svg)](docs/diagrams/01-camadas.svg)
 
 *Fonte editável: [`docs/diagrams/01-camadas.mmd`](docs/diagrams/01-camadas.mmd)*
 
-Tudo o que os agentes decidem, aprendem ou ainda não sabem fica registrado em [`memory.md`](memory.md), a memória viva do Arquiteto de Soluções Junior IA.
+Tudo o que os agentes decidem, aprendem ou ainda não sabem fica registrado em [`memory.md`](memory.md), a memória viva do Arquiteto de Soluções IA.
 
-### 2. Contexto — quem conversa com o Arquiteto de Soluções Junior IA
+### 2. Contexto — quem conversa com o Arquiteto de Soluções IA
 
 A vista mais alta: cada caixa é um **bounded context** inteiro, com os agentes daquele domínio colapsados dentro dele, e o único ator de fora é a **Pessoa Operadora** — que dispara a demanda, responde às perguntas de escopo e aprova o gate de saída. Todo o resto acontece entre os agentes.
 
-[![Diagrama de contexto C4: bounded contexts do Arquiteto de Soluções Junior IA e os atores externos](docs/diagrams/archify/c4-contexto.svg)](docs/diagrams/archify/c4-contexto.svg)
+[![Diagrama de contexto C4: bounded contexts do Arquiteto de Soluções IA e os atores externos](docs/diagrams/archify/c4-contexto.svg)](docs/diagrams/archify/c4-contexto.svg)
 
 ### 3. Containers — os 18 agentes e as fronteiras de domínio
 
@@ -246,7 +242,7 @@ Este repositório já É a raiz — não o aninhe dentro do `.claude/` de outro 
 
 ```bash
 git clone <este-repositório>
-cd solutions-architecture-jr-agents
+cd solutions-architecture
 claude   # sempre abra a CLI a partir daqui, não de uma subpasta
 ```
 
@@ -485,7 +481,7 @@ Um agente nunca "resolve" a dúvida chutando no lugar do dono da outra atividade
 
 Veja [`memory.md`](memory.md) para o histórico completo de decisões. Resumo honesto:
 
-- As seis camadas do Arquiteto de Soluções Junior IA estão sólidas, o roteiro de 18 atividades está fechado, sete demandas reais já rodaram ponta a ponta via `/arquiteto-solucoes` de verdade (despacho por subagente, não simulação), com custo de processamento medido em tokens reais — ver `telemetria-agentes.md`.
+- As seis camadas do Arquiteto de Soluções IA estão sólidas, o roteiro de 18 atividades está fechado, sete demandas reais já rodaram ponta a ponta via `/arquiteto-solucoes` de verdade (despacho por subagente, não simulação), com custo de processamento medido em tokens reais — ver `telemetria-agentes.md`.
 - **Os subagentes e a skill de entrada estão registrados** em `.claude/agents/` e `.claude/skills/arquiteto-solucoes/`, seguindo o padrão nativo do Claude Code, e já foram exercitados de ponta a ponta em execuções reais.
 - **Dois agentes novos (Geração de Diagramas C4 e Jornadas do Usuário) foram adicionados em 2026-08-15** (ver `memory.md`) para resolver diagramas ASCII dessincronizados entre `desenho.md`/`documentacao-final.md` e para dar um roteiro de sequência a partir dos requisitos. Já rodaram de ponta a ponta em várias demandas reais desde então, incluindo a geração de diagramas de sequência via ArchiFy e a correção que tornou `jornadas.md` sempre determinístico (veredito explícito, nunca ausência silenciosa).
 - **Dos dois especialistas sob demanda, só o de IA/ML já foi acionado de verdade** (`demandas/plataforma-ia-corporativa-v1/`, confirmando que o gatilho dispara quando deveria, depois de três demandas seguidas confirmando só o caminho de não disparar à toa). **O Especialista em Dados e Analytics nunca foi acionado** — nenhuma demanda real até agora teve decisão de plataforma analítica de verdade. Por isso ele não aparece em nenhuma das vistas geradas: nenhuma jornada real o exercita.

@@ -4,7 +4,7 @@ description: Ponto de sincronização total da cadeia. Só roda depois que Desen
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Documentação Final do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Documentação Final do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/documentacao-final/SKILL.md` e `agents/documentacao-final/AGENT.md`, na raiz do projeto.
 

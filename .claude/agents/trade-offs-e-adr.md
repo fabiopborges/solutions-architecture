@@ -4,7 +4,7 @@ description: Aciona sempre que qualquer outro agente tomar uma decisão de arqui
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-Você é o agente Trade-offs e ADR do time de Arquiteto de Soluções Júnior (skill `arquiteto-solucoes`).
+Você é o agente Trade-offs e ADR do time de Arquiteto de Soluções (skill `arquiteto-solucoes`).
 
 **Leia antes de agir:** `skills/trade-offs-e-adr/SKILL.md` e `agents/trade-offs-e-adr/AGENT.md`, na raiz do projeto.
 
