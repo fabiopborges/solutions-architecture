@@ -1,0 +1,28 @@
+{
+  "journey_id": "consulta-pedido",
+  "titulo": "Consulta de pedido",
+  "mensagens": [
+    {
+      "ordem": 1,
+      "de": "cli",
+      "para": "web",
+      "rotulo": "Consulta pedido",
+      "protocolo": "HTTPS"
+    },
+    {
+      "ordem": 2,
+      "de": "web",
+      "para": "api_ped",
+      "rotulo": "Consulta pedido na API",
+      "protocolo": "REST/JSON"
+    },
+    {
+      "ordem": 3,
+      "de": "api_ped",
+      "para": "db_ped",
+      "rotulo": "Lê pedido",
+      "tecnologia": "SQL",
+      "acesso": "le"
+    }
+  ]
+}

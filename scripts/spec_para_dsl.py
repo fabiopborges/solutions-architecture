@@ -1,0 +1,652 @@
+#!/usr/bin/env python3
+"""Spec C4 v2 (JSON) -> Structurizr DSL.
+
+Só traduz o que o spec diz (nunca decide arquitetura nem inventa tecnologia).
+Schema e regras: docs/diagrams/c4-schema-v2.md. Só para demandas novas.
+
+Uso:
+    python3 scripts/spec_para_dsl.py spec.json -o workspace.dsl [--sem-horizontal]
+
+Saída: workspace.dsl + relatório de avisos (sempre exibido, mesmo vazio).
+Código de saída 1 se houver erro (referência inválida, limite de palavras, nível não suportado).
+
+Suporte atual: nivel "container" (com journey_id, gera também o Dynamic diagram numerado, na ordem de
+conexoes[]) e nivel "contexto" (System Context: o sistema vira uma caixa; ver colapsar_contexto).
+Os demais níveis entram na Fase 4.
+"""
+import argparse
+import copy
+import json
+import pathlib
+import re
+import sys
+import unicodedata
+
+LIMITE_PALAVRAS = 12
+NIVEIS_SUPORTADOS = ("container", "contexto", "componente", "fluxo-dados")
+SIS_CTX = "ctx_sistema_raiz"   # id interno da caixa única do System Context
+STATUS_TAG = {"novo": "Novo", "alterado": "Alterado", "reuso": "Reuso", "existente": "Existente"}
+FORMA_TAG = {"api": "Api", "app-web": "App Web", "app-movel": "App Móvel"}
+ARMAZ_ROTULO = {"relacional": "banco relacional", "documento": "banco de documentos", "cache": "cache",
+                "objetos": "armazenamento de objetos", "busca": "índice de busca", "analitico": "armazenamento analítico"}
+MENS_ROTULO = {"fila": "fila", "topico": "tópico", "stream": "stream"}
+PALAVRAS_BROKER = ("broker", "message bus", "barramento")
+ACESSOS_ASSINCRONOS = ("publica", "consome")
+
+
+# ----------------------------------------------------------------------------- utilidades
+def ident(texto):
+    s = unicodedata.normalize("NFKD", str(texto)).encode("ascii", "ignore").decode()
+    s = re.sub(r"\W+", "_", s).strip("_") or "x"
+    return "e_" + s if s[0].isdigit() else s
+
+
+def slug(texto):
+    s = unicodedata.normalize("NFKD", str(texto)).encode("ascii", "ignore").decode().lower()
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-") or "geral"
+
+
+def q(texto):
+    """Literal de string do DSL."""
+    return '"' + str(texto).replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ") + '"'
+
+
+def palavras(texto):
+    return len((texto or "").split())
+
+
+# ----------------------------------------------------------------------------- validação
+def validar(spec):
+    """Retorna (erros, avisos). Erros impedem a geração; avisos entram no relatório."""
+    erros, avisos = [], []
+    try:
+        import jsonschema  # opcional: o schema formal é checado quando a biblioteca existe
+        esquema = json.loads((pathlib.Path(__file__).resolve().parent.parent / "docs" / "diagrams" / "c4-schema-v2.schema.json").read_text(encoding="utf-8"))
+        for e in sorted(jsonschema.Draft202012Validator(esquema).iter_errors(spec), key=lambda e: list(e.path)):
+            erros.append(f"[schema] {'/'.join(map(str, e.path)) or '(raiz)'}: {e.message}")
+    except ImportError:
+        avisos.append("[SCHEMA-NAO-VALIDADO] biblioteca jsonschema ausente: só as checagens internas rodaram")
+
+    nivel = spec.get("nivel")
+    if nivel not in NIVEIS_SUPORTADOS:
+        erros.append(f"[nivel] '{nivel}' ainda não é gerado (suportado: {', '.join(NIVEIS_SUPORTADOS)})")
+
+    atores = spec.get("atores", []) or []
+    comps = spec.get("componentes", []) or []
+    fronts = spec.get("fronteiras", []) or []
+    conx = spec.get("conexoes", []) or []
+
+    ids = {}
+    for tipo, lista in (("ator", atores), ("componente", comps), ("fronteira", fronts)):
+        for item in lista:
+            i = item.get("id")
+            if i is None:
+                continue
+            if i in ids:
+                erros.append(f"[id-duplicado] '{i}' ({tipo}) já usado como {ids[i]}")
+            ids[i] = tipo
+    ids_fr = {f["id"] for f in fronts if "id" in f}
+    ids_node = {x["id"] for x in atores + comps if "id" in x}
+    mens = {c["id"] for c in comps if c.get("mensageria") and "id" in c}
+    nome_de = {x["id"]: x.get("nome", x["id"]) for x in atores + comps + fronts if "id" in x}
+
+    for f in fronts:
+        if f.get("pai_id") and f["pai_id"] not in ids_fr:
+            erros.append(f"[ref] fronteira '{f.get('id')}': pai_id '{f['pai_id']}' não existe")
+    for f in fronts:  # ciclo em pai_id
+        visto, cur = set(), f.get("id")
+        pais = {x["id"]: x.get("pai_id") for x in fronts if "id" in x}
+        while cur:
+            if cur in visto:
+                erros.append(f"[ref] ciclo em pai_id envolvendo fronteira '{f.get('id')}'"); break
+            visto.add(cur); cur = pais.get(cur)
+    for c in comps:
+        if c.get("fronteira_id") and c["fronteira_id"] not in ids_fr:
+            erros.append(f"[ref] componente '{c.get('id')}': fronteira_id '{c['fronteira_id']}' não existe")
+        d = c.get("dono_id")
+        if d and d not in ids_fr and d not in ids_node:
+            erros.append(f"[ref] componente '{c.get('id')}': dono_id '{d}' não existe")
+    for i, c in enumerate(conx):
+        for campo in ("de", "para"):
+            if c.get(campo) not in ids_node:
+                erros.append(f"[FALTA-CATALOGO] conexão #{i + 1}: '{c.get(campo)}' ({campo}) não existe em atores/componentes")
+        if c.get("via") and c["via"] not in mens:
+            erros.append(f"[ref] conexão #{i + 1}: via '{c['via']}' não é um componente com mensageria")
+
+    # limite de palavras (campos que aparecem na figura). `condicao` fica fora do limite.
+    for chave, campos in (("componentes", ("nome", "descricao")), ("atores", ("nome", "papel")), ("fronteiras", ("nome",)), ("conexoes", ("rotulo",))):
+        for item in spec.get(chave, []) or []:
+            for campo in campos:
+                n = palavras(item.get(campo))
+                if n > LIMITE_PALAVRAS:
+                    erros.append(f"[limite-palavras] {chave}.{campo} '{item.get('id', item.get('de', '?'))}' tem {n} palavras (limite {LIMITE_PALAVRAS})")
+
+    if nivel == "componente":
+        erros += _erros_componente(spec)
+    if nivel == "fluxo-dados" and not any(c.get("armazenamento") or c.get("mensageria") for c in comps):
+        erros.append("[fluxo-dados] nenhum componente tem armazenamento ou mensageria; não há fluxo de dados para mostrar")
+
+    # ----- avisos
+    ligados = {c.get("de") for c in conx} | {c.get("para") for c in conx} | {c.get("via") for c in conx}
+    for x in atores + comps:
+        if x.get("id") not in ligados:
+            avisos.append(f"[ORFAO] '{x.get('id')}' não aparece em nenhuma conexão")
+    for c in comps:
+        if not c.get("tecnologia") and not (c.get("mensageria") and c.get("broker")):
+            avisos.append(f"[SEM-TECNOLOGIA] componente '{c.get('id')}' sem tecnologia (o gerador não inventa)")
+        tipo = (c.get("tipo") or "").lower()
+        if any(p in tipo for p in PALAVRAS_BROKER) and not c.get("mensageria"):
+            avisos.append(f"[BROKER-COMO-CONTAINER] '{c.get('id')}' parece um broker; o C4 modela cada fila/tópico como container (campo mensageria) e o broker como tecnologia")
+        if c.get("mensageria") and not c.get("dono_id") and not c.get("fronteira_id"):
+            avisos.append(f"[SEM-DONO] '{c.get('id')}' (mensageria) sem dono_id e sem fronteira_id")
+    for c in conx:
+        if c.get("de") in ids_node and c.get("para") in ids_node and not c.get("tecnologia"):
+            avisos.append(f"[SEM-TECNOLOGIA] conexão {c['de']} -> {c['para']} sem tecnologia")
+    # banco compartilhado: armazenamento acessado por componentes de fronteiras diferentes
+    fr_de = {c["id"]: c.get("fronteira_id") for c in comps if "id" in c}
+    for c in comps:
+        if not c.get("armazenamento"):
+            continue
+        acessos = {fr_de.get(x["de"]) for x in conx if x.get("para") == c["id"] and x.get("de") in fr_de}
+        if len(acessos) > 1:
+            avisos.append(f"[BANCO-COMPARTILHADO] '{c['id']}' é acessado por componentes de {len(acessos)} fronteiras diferentes")
+    _ = nome_de
+    if nivel == "contexto":
+        # tecnologia, broker, dono e banco são assuntos do Container; no Contexto só importam órfãos e atores omitidos
+        avisos = [a for a in avisos if not a.startswith(("[SEM-TECNOLOGIA]", "[BROKER-COMO-CONTAINER]", "[SEM-DONO]", "[BANCO-COMPARTILHADO]"))]
+        if not erros:
+            ctx = colapsar_contexto(spec)
+            avisos = [a for a in avisos if not any(a.startswith(f"[ORFAO] '{i}'") for i in ctx["omitidos"])]   # já coberto pelo aviso abaixo
+            for i in ctx["omitidos"]:
+                avisos.append(f"[ATOR-FORA-DO-CONTEXTO] '{i}' não se liga diretamente ao sistema; omitido do System Context (C4: só pessoas e sistemas diretamente conectados)")
+            if not ctx["atores"]:
+                erros.append("[contexto] nenhum ator ou sistema externo ligado diretamente ao sistema")
+    if nivel == "fluxo-dados" and not erros:
+        omit = set(_efetivo_fluxo(spec)["_omitidos"])   # fora da visão por desenho: ruído para quem lê o fluxo de dados
+        avisos = [a for a in avisos if not any(a.startswith(f"{k} '{i}'") or a.startswith(f"{k} componente '{i}'") for i in omit for k in ("[ORFAO]", "[SEM-TECNOLOGIA]", "[SEM-DONO]"))]
+    if nivel == "componente" and not erros:
+        ef = _efetivo_componente(spec)
+        avisos = [a for a in avisos if not a.startswith(f"[ORFAO] '{ef['_foco']['id']}'")]   # o foco é a fronteira da visão
+        for i in ef["_omitidos"]:
+            if not any(a.startswith(f"[ORFAO] '{i}'") for a in avisos):
+                avisos.append(f"[FORA-DA-VISAO] '{i}' não se liga a nenhum componente interno de '{ef['_foco']['id']}'; omitido do Component diagram")
+    return erros, avisos
+
+
+def _erros_componente(spec):
+    """Regras do Component diagram: um container em foco (foco_id) e seus componentes internos (container_id)."""
+    erros = []
+    comps = {c["id"]: c for c in spec.get("componentes", []) or [] if "id" in c}
+    foco = spec.get("foco_id")
+    if not foco:
+        return ["[componente] falta foco_id (id do container cujos componentes internos serão mostrados)"]
+    if foco not in comps:
+        return [f"[componente] foco_id '{foco}' não é um componente do spec"]
+    if comps[foco].get("container_id"):
+        erros.append(f"[componente] o foco '{foco}' não pode ser, ele mesmo, um componente interno")
+    internos = {i for i, c in comps.items() if c.get("container_id")}
+    for i in sorted(internos):
+        c = comps[i]
+        if c["container_id"] != foco:
+            erros.append(f"[componente] '{i}': container_id '{c['container_id']}' diferente do foco '{foco}' (uma visão mostra um container só)")
+        if c.get("fronteira_id"):
+            erros.append(f"[componente] '{i}' é interno ao container e não pode ter fronteira_id")
+    if not internos:
+        erros.append(f"[componente] nenhum componente tem container_id '{foco}'")
+    for k, c in enumerate(spec.get("conexoes", []) or []):
+        pontas = {c.get("de"), c.get("para")}
+        if foco in pontas and pontas & internos:
+            erros.append(f"[componente] conexão #{k + 1}: relação entre o container '{foco}' e seu próprio componente interno não é permitida pelo C4")
+    return erros
+
+
+# ----------------------------------------------------------------------------- modelo efetivo
+def base_view(spec):
+    """Prefixo da visão estrutural: 'contexto' ou 'container' (chave das views e dos SVGs na página)."""
+    return spec["nivel"] if spec.get("nivel") in ("contexto", "componente", "fluxo-dados") else "container"
+
+
+def colapsar_contexto(spec):
+    """System Context (c4model.com/diagrams/system-context): o sistema em escopo vira UMA caixa; aparecem só
+    pessoas e sistemas diretamente ligados a ele; sem tecnologia nem protocolo nas setas.
+    Regras: conexão interna (componente -> componente) some; componente vira o sistema; ator sem ligação direta
+    ao sistema é omitido (e avisado); várias conexões do mesmo par viram uma seta ("N interações" se N > 1),
+    assíncrona só se todas forem, condicional só se todas forem."""
+    comps = spec.get("componentes", []) or []
+    ids_comp = {c["id"] for c in comps}
+    mapa = lambda i: SIS_CTX if i in ids_comp else i
+    pares = {}
+    for c in spec.get("conexoes", []) or []:
+        de, para = mapa(c["de"]), mapa(c["para"])
+        if de == SIS_CTX and para == SIS_CTX:
+            continue
+        pares.setdefault((de, para), []).append(c)
+    diretos = {de if para == SIS_CTX else para for (de, para) in pares if SIS_CTX in (de, para)}
+    atores = [a for a in spec.get("atores", []) or [] if a["id"] in diretos]
+    omitidos = [a["id"] for a in spec.get("atores", []) or [] if a["id"] not in diretos]
+    conx = []
+    for (de, para), lst in pares.items():
+        if (de != SIS_CTX and de not in diretos) or (para != SIS_CTX and para not in diretos):
+            continue
+        assinc = all(x.get("assincrona") or x.get("acesso") in ACESSOS_ASSINCRONOS for x in lst)
+        cond = ", ".join(sorted({x["condicao"] for x in lst})) if all(x.get("condicao") for x in lst) else ""
+        novo = {"de": de, "para": para, "rotulo": lst[0]["rotulo"] if len(lst) == 1 else f"{len(lst)} interações", "assincrona": assinc}
+        if cond:
+            novo["condicao"] = cond
+        conx.append(novo)
+    status = {c["status"] for c in comps}
+    sis = spec.get("sistema") or {}
+    pseudo = {"id": SIS_CTX, "nome": nome_sistema(spec), "status": status.pop() if len(status) == 1 else ("alterado" if status else "novo"),
+              "descricao": sis.get("descricao", "")}
+    s = dict(spec)
+    s.update({"atores": atores, "componentes": [pseudo], "fronteiras": [], "conexoes": conx})
+    return {"atores": atores, "omitidos": omitidos, "spec": s}
+
+
+def modelo_efetivo(spec):
+    if spec.get("nivel") == "contexto":
+        return colapsar_contexto(spec)["spec"]
+    if spec.get("nivel") == "componente":
+        return _efetivo_componente(spec)
+    if spec.get("nivel") == "fluxo-dados":
+        return _efetivo_fluxo(spec)
+    return _efetivo_container(spec)
+
+
+def _efetivo_fluxo(spec):
+    """Fluxo de dados: só armazenamentos, filas/tópicos e quem os acessa (vizinho direto). Filas ficam visíveis (sem mensageria implícita)."""
+    s = copy.deepcopy(spec)
+    s.pop("mensageria_modo", None)
+    s = _efetivo_container(s)
+    dados = {c["id"] for c in s["componentes"] if c.get("armazenamento") or c.get("mensageria")}
+    conx = [c for c in s["conexoes"] if c["de"] in dados or c["para"] in dados]
+    vistos = set(dados)
+    for c in conx:
+        vistos |= {c["de"], c["para"]} | ({c["via"]} if c.get("via") else set())
+    s["_omitidos"] = [x["id"] for x in s["componentes"] + s.get("atores", []) if x["id"] not in vistos]
+    s["componentes"] = [c for c in s["componentes"] if c["id"] in vistos]
+    s["atores"] = [a for a in s.get("atores", []) if a["id"] in vistos]
+    s["conexoes"] = conx
+    s["journey_id"] = None   # sem Dynamic diagram: a visão é estrutural
+    return s
+
+
+def _efetivo_componente(spec):
+    """Component diagram: internos do foco + vizinhos diretamente ligados a eles. O foco fica em ["_foco"] (é a fronteira, não um elemento)."""
+    s = _efetivo_container(spec)
+    foco = next(c for c in s["componentes"] if c["id"] == s["foco_id"])
+    internos = {c["id"] for c in s["componentes"] if c.get("container_id")}
+    conx = [c for c in s["conexoes"] if c["de"] in internos or c["para"] in internos]
+    vistos = set(internos)
+    for c in conx:
+        vistos |= {c["de"], c["para"]} | ({c["via"]} if c.get("via") else set())
+    todos = [x for x in s["componentes"] + s.get("atores", []) if x["id"] != foco["id"]]
+    s["_omitidos"] = [x["id"] for x in todos if x["id"] not in vistos]
+    s["componentes"] = [c for c in s["componentes"] if c["id"] in vistos and c["id"] != foco["id"]]
+    s["atores"] = [a for a in s.get("atores", []) if a["id"] in vistos]
+    s["conexoes"] = conx
+    s["_foco"] = foco
+    return s
+
+
+def _efetivo_container(spec):
+    """Aplica mensageria_modo (implícita) e seta_mensageria (fluxo) sobre uma cópia do spec."""
+    s = copy.deepcopy(spec)
+    comps = {c["id"]: c for c in s.get("componentes", [])}
+    conx = list(s.get("conexoes", []))
+    if s.get("mensageria_modo") == "implicita":
+        for qid in [i for i, c in comps.items() if c.get("mensageria")]:
+            pubs = [c for c in conx if c["para"] == qid and c.get("acesso") == "publica"]
+            cons = [c for c in conx if c["para"] == qid and c.get("acesso") == "consome"]
+            outros = [c for c in conx if qid in (c["de"], c["para"]) and c not in pubs and c not in cons]
+            if len(pubs) == 1 and len(cons) == 1 and not outros and not any(c.get("via") == qid for c in conx):
+                fila = comps[qid]
+                pub, con = pubs[0], cons[0]
+                via = f"via {fila.get('nome', qid)}" + (f" ({fila['broker']})" if fila.get("broker") else "")
+                novo = {"de": pub["de"], "para": con["de"], "rotulo": pub["rotulo"], "assincrona": True,
+                        "acesso": "chama", "tecnologia": (pub.get("tecnologia") + ", " if pub.get("tecnologia") else "") + via}
+                cond = pub.get("condicao") or con.get("condicao")
+                if cond:
+                    novo["condicao"] = cond
+                if pub.get("journey_id"):
+                    novo["journey_id"] = pub["journey_id"]
+                conx[conx.index(pub)] = novo
+                conx.remove(con)
+                del comps[qid]
+    if s.get("seta_mensageria") == "fluxo":
+        for c in conx:
+            if c.get("acesso") == "consome" and comps.get(c["para"], {}).get("mensageria"):
+                c["de"], c["para"] = c["para"], c["de"]
+    s["componentes"] = list(comps.values())
+    s["conexoes"] = conx
+    return s
+
+
+# ----------------------------------------------------------------------------- DSL
+def _tecnologia(c):
+    if c.get("mensageria"):
+        base = c.get("broker") or c.get("tecnologia") or ""
+        return (base + " · " if base else "") + MENS_ROTULO[c["mensageria"]]
+    if c.get("armazenamento"):
+        base = c.get("tecnologia") or ""
+        return (base + " · " if base else "") + ARMAZ_ROTULO[c["armazenamento"]]
+    return c.get("tecnologia") or ""
+
+
+def _tags_comp(c):
+    tags = [STATUS_TAG[c["status"]]]
+    if c.get("forma") in FORMA_TAG:
+        tags.append(FORMA_TAG[c["forma"]])
+    if c.get("armazenamento"):
+        tags.append("Armazenamento")
+    if c.get("mensageria"):
+        tags.append("Mensageria")
+    return ",".join(tags)
+
+
+def _descricao(c, nome_de):
+    extras = [c.get("dono_id"), c.get("retencao"), c.get("sensibilidade")]
+    base = c.get("descricao", "")
+    if not any(extras):
+        return base   # sem campos extras, preserva o texto do spec exatamente (inclusive o ponto final)
+    partes = [base.rstrip(".")]
+    if c.get("dono_id"):
+        partes.append(f"Dono: {nome_de.get(c['dono_id'], c['dono_id'])}")
+    if c.get("retencao"):
+        partes.append(f"Retenção: {c['retencao']}")
+    if c.get("sensibilidade"):
+        partes.append(f"Sensibilidade: {c['sensibilidade']}")
+    return ". ".join(p for p in partes if p)
+
+
+def _caminho_fronteira(fid, fronts):
+    por_id = {f["id"]: f for f in fronts}
+    nomes = []
+    while fid:
+        nomes.append(por_id[fid]["nome"]); fid = por_id[fid].get("pai_id")
+    return " / ".join(reversed(nomes))
+
+
+# Paleta única: o gerador a aplica e o validador (validar_diagrama_c4.py) mede o contraste dela.
+# (fundo, texto) por tag de elemento. Mesmas cores nos dois temas, como no piloto aprovado.
+PALETA_ELEMENTOS = {
+    "Person": ("#08427b", "#ffffff"), "Software System": ("#1168bd", "#ffffff"), "Container": ("#1168bd", "#ffffff"),
+    "Novo": ("#1168bd", "#ffffff"), "Reuso": ("#8ec2f2", "#0b1f33"),
+    "Existente": ("#a8a8a8", "#111111"), "Alterado": ("#e76f51", "#111111"),
+}
+# por tema: cor da seta, cor da seta condicional, texto e borda do grupo, fundo do canvas (o da página)
+PALETA_TEMA = {
+    "light": {"seta": "#444444", "condicional": "#a35f00", "grupo_txt": "#444444", "grupo_borda": "#888888", "canvas": "#ffffff"},
+    "dark": {"seta": "#d0d7e2", "condicional": "#f0a940", "grupo_txt": "#d0d7e2", "grupo_borda": "#8a94a6", "canvas": "#111111"},
+}
+FORMAS_TAG = (("Api", "Hexagon"), ("App Web", "WebBrowser"), ("App Móvel", "MobileDevicePortrait"),
+              ("Armazenamento", "Cylinder"), ("Mensageria", "Pipe"))
+
+
+def _estilos(modo):
+    pt = PALETA_TEMA[modo]
+    s = f"            {modo} {{\n"
+    for tag, (bg, fg) in PALETA_ELEMENTOS.items():
+        forma = "                    shape Person\n" if tag == "Person" else ""
+        s += f'                element "{tag}" {{\n{forma}                    background {bg}\n                    color {fg}\n                }}\n'
+    for tag, forma in FORMAS_TAG:
+        s += f'                element "{tag}" {{\n                    shape {forma}\n                }}\n'
+    s += f'                element "Group" {{\n                    color {pt["grupo_txt"]}\n                    stroke {pt["grupo_borda"]}\n                    strokeWidth 2\n                }}\n'
+    s += f'                relationship "Relationship" {{\n                    thickness 3\n                    dashed false\n                    color {pt["seta"]}\n                    routing Curved\n                    fontSize 22\n                    width 420\n                }}\n'
+    s += '                relationship "Assíncrono" {\n                    dashed true\n                }\n'
+    s += f'                relationship "Condicional" {{\n                    color {pt["condicional"]}\n                }}\n'
+    s += "            }\n"
+    return s
+
+
+def rotulo_exibido(c):
+    """Rótulo como aparece no diagrama. Conexão condicional ganha o prefixo "Condicional a <condicao>: ";
+    a 1ª letra do rótulo vira minúscula só se a 1ª palavra for comum (inicial maiúscula e o resto só letras
+    minúsculas). Siglas (API, C6) e identificadores (EventoDeConta) ficam como estão."""
+    r = c["rotulo"]
+    if not c.get("condicao"):
+        return r
+    primeira = r.split()[0] if r.split() else ""
+    if len(primeira) > 1 and primeira[0].isupper() and primeira[1:].isalpha() and primeira[1:].islower():
+        r = r[0].lower() + r[1:]
+    return f"Condicional a {c['condicao']}: {r}"
+
+
+def _rel(c, ref):
+    desc = rotulo_exibido(c)
+    tags = []
+    if c.get("assincrona") or c.get("acesso") in ACESSOS_ASSINCRONOS:
+        tags.append("Assíncrono")
+    if c.get("condicao"):
+        tags.append("Condicional")
+    return ref(c["de"]), ref(c["para"]), desc, c.get("tecnologia", ""), ",".join(tags)
+
+
+def nome_sistema(spec):
+    sis = spec.get("sistema") or {}
+    return sis.get("nome") or spec["titulo"].split(" — ")[0].strip()
+
+
+def titulos_views(spec, ef):
+    sis = nome_sistema(spec)
+    jid = None if spec.get("nivel") == "fluxo-dados" else spec.get("journey_id")
+    escopo = f" (jornada {jid})" if jid else ""
+    conds = sorted({c["condicao"] for c in ef["conexoes"] if c.get("condicao")})
+    legenda = "Tracejado = assíncrono."
+    if conds:
+        legenda += f" 'Condicional' no texto = depende de hipótese em aberto ({', '.join(conds)})."
+    base = (spec.get("subtitulo", "").rstrip(".") + ". ") if spec.get("subtitulo") else ""
+    if spec.get("nivel") == "contexto":
+        return {"contexto": {"title": f"System Context diagram for {sis}{escopo}", "desc": base + legenda}}
+    if spec.get("nivel") == "fluxo-dados":
+        return {"fluxo-dados": {"title": f"Container diagram (fluxo de dados) for {sis}{escopo}",
+                                "desc": "Só armazenamentos, filas e tópicos, e quem os acessa. " + legenda}}
+    if spec.get("nivel") == "componente":
+        foco = ef["_foco"].get("nome", ef["_foco"]["id"])
+        return {"componente": {"title": f"Component diagram for {sis} · {foco}", "desc": base + legenda}}
+    t = {"container": {"title": f"Container diagram for {sis}{escopo}", "desc": base + legenda}}
+    if jid:
+        t["dynamic"] = {"title": f"Dynamic diagram for {sis}{escopo}", "desc": "Ordem das interações, numeradas. " + legenda}
+    return t
+
+
+def _linhas_atores(L, atores):
+    for a in atores:
+        tag = STATUS_TAG.get(a.get("status", ""), "")
+        if a["tipo"] == "sistema_externo":
+            L.append(f'        {ident(a["id"])} = softwareSystem {q(a["nome"])} {q(a.get("papel", ""))} {q(tag or "Existente")}')
+        else:
+            L.append(f'        {ident(a["id"])} = person {q(a["nome"])} {q(a.get("papel", ""))}' + (f" {q(tag)}" if tag else ""))
+
+
+def _gerar_dsl_contexto(spec, horizontal):
+    ef = modelo_efetivo(spec)
+    atores, pseudo, conx = ef["atores"], ef["componentes"][0], ef["conexoes"]
+    jid = spec.get("journey_id")
+    sl = slug(jid) if jid else "geral"
+    ref = lambda i: "sis" if i == SIS_CTX else ident(i)
+    L = [f"workspace {q(spec['titulo'])} {q(spec.get('subtitulo', ''))} {{", "", "    !identifiers hierarchical", "", "    model {"]
+    _linhas_atores(L, atores)
+    L += ["", f'        sis = softwareSystem {q(pseudo["nome"])} {q(pseudo.get("descricao", ""))} {q(STATUS_TAG[pseudo["status"]])}', "",
+          "        # Relações do System Context: sem tecnologia nem protocolo (c4model.com/diagrams/system-context)."]
+    for c in conx:
+        o, d, desc, _, tags = _rel(c, ref)
+        L.append(f'        {o} -> {d} {q(desc)} ""' + (f" {q(tags)}" if tags else ""))
+    L += ["    }", "", "    views {"]
+    tit = titulos_views(spec, ef)["contexto"]
+    inc = "\n".join(f"            include {ident(a['id'])}" for a in atores)
+    for suf, lay in [("", "tb 130 100")] + ([("-h", "lr 120 110")] if horizontal else []):
+        L += [f'        systemContext sis "contexto{suf}-{sl}" {{', f'            title {q(tit["title"])}', f'            description {q(tit["desc"])}',
+              "            include *", inc, f"            autolayout {lay}", "        }", ""]
+    L += ["        # Cores = status. Tema escuro repete os estilos de elemento.", "        styles {", _estilos("light").rstrip("\n"), _estilos("dark").rstrip("\n"), "        }", "    }", "}", ""]
+    return "\n".join(L)
+
+
+def gerar_dsl(spec, horizontal=True):
+    if spec.get("nivel") == "contexto":
+        return _gerar_dsl_contexto(spec, horizontal)
+    ef = modelo_efetivo(spec)
+    atores, comps, fronts, conx = ef.get("atores", []), ef.get("componentes", []), ef.get("fronteiras", []), ef.get("conexoes", [])
+    foco = ef.get("_foco")
+    if foco:   # Component diagram: o foco volta à lista (como container) e carrega seus internos
+        comps = [c for c in ef["componentes"]] + [foco]
+        comps.sort(key=lambda c: next(i for i, x in enumerate(spec["componentes"]) if x["id"] == c["id"]))
+    sis = nome_sistema(spec)
+    sis_desc = (spec.get("sistema") or {}).get("descricao", "")
+    nome_de = {x["id"]: x.get("nome", x["id"]) for x in atores + comps + fronts}
+    ids_node = {x["id"] for x in comps}
+    internos = [c for c in comps if c.get("container_id")] if foco else []
+    comps = [c for c in comps if c not in internos]
+    jid = ef.get("journey_id") if not foco else None
+    sl = slug(jid) if jid else "geral"
+    pessoas = [a for a in atores if a["tipo"] != "sistema_externo"]
+
+    def ref(i):
+        if foco and i in {c["id"] for c in internos}:
+            return f"sis.{ident(foco['id'])}.{ident(i)}"
+        return ("sis." if i in ids_node else "") + ident(i)
+
+    L = [f"workspace {q(spec['titulo'])} {q(spec.get('subtitulo', ''))} {{", "", "    !identifiers hierarchical"]
+    L += ["", "    model {"]
+    if any(f.get("pai_id") for f in fronts):  # grupos aninhados exigem a propriedade no model
+        L += ["        properties {", '            "structurizr.groupSeparator" "/"', "        }", ""]
+    _linhas_atores(L, atores)
+    L += ["", f"        sis = softwareSystem {q(sis)} {q(sis_desc)} {{"]
+
+    usados = {c.get("fronteira_id") for c in comps}
+    filhos = {}
+    for f in fronts:
+        filhos.setdefault(f.get("pai_id"), []).append(f)
+
+    def tem_conteudo(f):
+        return f["id"] in usados or any(tem_conteudo(x) for x in filhos.get(f["id"], []))
+
+    def emite_comp(c, ind):
+        eh_foco = bool(foco) and c["id"] == foco["id"]
+        L.append(f'{ind}{ident(c["id"])} = container {q(c["nome"])} {q(_descricao(c, nome_de))} {q(_tecnologia(c))} {q(_tags_comp(c))}' + (" {" if eh_foco else ""))
+        if eh_foco:
+            for i in internos:
+                L.append(f'{ind}    {ident(i["id"])} = component {q(i["nome"])} {q(_descricao(i, nome_de))} {q(_tecnologia(i))} {q(_tags_comp(i))}')
+            L.append(f"{ind}}}")
+
+    def emite_grupo(f, ind):
+        L.append(f'{ind}group {q(f["nome"].replace("/", "-"))} {{')
+        for c in comps:
+            if c.get("fronteira_id") == f["id"]:
+                emite_comp(c, ind + "    ")
+        for x in filhos.get(f["id"], []):
+            if tem_conteudo(x):
+                emite_grupo(x, ind + "    ")
+        L.append(f"{ind}}}")
+
+    for f in filhos.get(None, []):
+        if tem_conteudo(f):
+            emite_grupo(f, "            ")
+    for c in comps:
+        if not c.get("fronteira_id"):
+            emite_comp(c, "            ")
+    L += ["        }", "", "        # Relações: uma seta = uma relação unidirecional. Descrição e tecnologia vêm do spec."]
+    for c in conx:
+        o, d, desc, tec, tags = _rel(c, ref)
+        L.append(f"        {o} -> {d} {q(desc)} {q(tec)}" + (f" {q(tags)}" if tags else ""))
+    L += ["    }", "", "    views {"]
+
+    tit = titulos_views(spec, ef)
+    inc_pessoas = "".join(f"            include {ident(a['id'])}\n" for a in pessoas)
+    variantes = [("", "tb 130 100", "tb 140 110")] + ([("-h", "lr 120 110", "lr 120 110")] if horizontal else [])
+    for suf, lay_c, lay_d in variantes:
+        if foco:
+            L.append(f'        component sis.{ident(foco["id"])} "componente{suf}-{sl}" {{')
+            L.append(f'            title {q(tit["componente"]["title"])}\n            description {q(tit["componente"]["desc"])}\n            include *')
+            L += [f"            autolayout {lay_c}", "        }", ""]
+            continue
+        vw = base_view(spec)   # "container" ou "fluxo-dados"
+        L.append(f'        container sis "{vw}{suf}-{sl}" {{')
+        L.append(f'            title {q(tit[vw]["title"])}\n            description {q(tit[vw]["desc"])}\n            include *')
+        if inc_pessoas:
+            L.append(inc_pessoas.rstrip("\n"))
+        L += [f"            autolayout {lay_c}", "        }", ""]
+        if jid:
+            L.append(f'        dynamic sis "dynamic{suf}-{sl}" {{')
+            L.append(f'            title {q(tit["dynamic"]["title"])}\n            description {q(tit["dynamic"]["desc"])}')
+            for c in conx:
+                o, d, desc, _, _ = _rel(c, ref)
+                L.append(f"            {o} -> {d} {q(desc)}")
+            L += [f"            autolayout {lay_d}", "        }", ""]
+    L += ["        # Cores = status do componente. Formas = tipo de elemento. Tema escuro repete os estilos de elemento.", "        styles {"]
+    L.append(_estilos("light").rstrip("\n"))
+    L.append(_estilos("dark").rstrip("\n"))
+    L += ["        }", "    }", "}", ""]
+    return "\n".join(L)
+
+
+# ----------------------------------------------------------------------------- dados para a página
+def modelo_pagina(spec, avisos):
+    ef = modelo_efetivo(spec)
+    atores, comps, fronts, conx = ef.get("atores", []), ef.get("componentes", []), ef.get("fronteiras", []), ef.get("conexoes", [])
+    nome_de = {x["id"]: x.get("nome", x["id"]) for x in atores + comps + fronts}
+    jid = spec.get("journey_id")
+    ctx = spec.get("nivel") == "contexto"
+    cmp_ = spec.get("nivel") == "componente"
+    if spec.get("nivel") == "fluxo-dados":
+        jid = None   # visão estrutural: mesmo nome de view que o DSL ("geral")
+    return {
+        "base": base_view(spec),
+        "nivel": spec.get("nivel"),
+        "rotulo_aba": "System Context diagram" if ctx else ("Component diagram" if cmp_ else ("Fluxo de dados" if spec.get("nivel") == "fluxo-dados" else "Container diagram")),
+        "textos": ({"comp": f"O sistema em escopo (1 caixa) e {len(atores)} pessoas e sistemas diretamente ligados a ele.",
+                    "con": f"{len(conx)} setas, uma por par de elementos. Detalhes técnicos ficam no Container diagram."} if ctx else
+                   {"comp": f"{len(comps)} elementos: componentes internos de {ef['_foco']['nome']} e vizinhos ligados a eles.",
+                    "con": f"{len(conx)} interações que envolvem os componentes internos."} if cmp_ else
+                   {"comp": f"{len(comps)} elementos: armazenamentos, filas e tópicos, e quem os acessa.",
+                    "con": f"{len(conx)} acessos a dados (lê, grava, publica, consome)."} if spec.get("nivel") == "fluxo-dados" else
+                   {"comp": f"{len(comps)} containers e {len(atores)} atores (pessoas e sistemas externos).",
+                    "con": f"{len(conx)} interações, na ordem do spec. A numeração corresponde aos passos do Dynamic diagram."}),
+        "sistema": nome_sistema(spec),
+        "slug": slug(jid) if jid else "geral",
+        "journey": jid or "",
+        "titles": titulos_views(spec, ef),
+        "atores": [{"nome": a["nome"], "status": STATUS_TAG.get(a.get("status", ""), "Pessoa" if a["tipo"] != "sistema_externo" else "Existente"),
+                    "tec": "Pessoa" if a["tipo"] != "sistema_externo" else "Sistema externo", "papel": a.get("papel", "")} for a in atores],
+        "componentes": [{"nome": c["nome"], "status": STATUS_TAG[c["status"]], "tec": _tecnologia(c),
+                         "grupo": _caminho_fronteira(c["fronteira_id"], fronts) if c.get("fronteira_id") else "—",
+                         "descr": _descricao(c, nome_de)} for c in comps],
+        "conexoes": [{"de": nome_de[c["de"]], "para": nome_de[c["para"]], "rotulo": c["rotulo"], "tec": c.get("tecnologia", ""),
+                      "assinc": bool(c.get("assincrona") or c.get("acesso") in ACESSOS_ASSINCRONOS), "cond": c.get("condicao", "")}
+                     for c in conx],
+        "formas": sorted({FORMA_TAG[c["forma"]] for c in comps if c.get("forma") in FORMA_TAG}
+                         | ({"Armazenamento"} if any(c.get("armazenamento") for c in comps) else set())
+                         | ({"Mensageria"} if any(c.get("mensageria") for c in comps) else set())),
+        "tem_pessoa": any(a["tipo"] != "sistema_externo" for a in atores),
+        "tem_grupo": any(c.get("fronteira_id") for c in comps),
+        "glossario": spec.get("glossario", []),
+        "titulo_pagina": spec.get("titulo_pagina", ""),
+        "suposicoes": spec.get("suposicoes", []),
+        "leitura": spec.get("leitura", []),
+        "nota": spec.get("nota", ""),
+        "avisos": avisos,
+    }
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("spec")
+    ap.add_argument("-o", "--saida", required=True)
+    ap.add_argument("--sem-horizontal", action="store_true")
+    a = ap.parse_args()
+    spec = json.loads(pathlib.Path(a.spec).read_text(encoding="utf-8"))
+    erros, avisos = validar(spec)
+    print("Avisos:" if avisos else "Avisos: nenhum.")
+    for x in avisos:
+        print("  " + x)
+    if erros:
+        print("Erros:")
+        for x in erros:
+            print("  " + x)
+        sys.exit(1)
+    pathlib.Path(a.saida).write_text(gerar_dsl(spec, horizontal=not a.sem_horizontal), encoding="utf-8")
+    print("ok:", a.saida)
+
+
+if __name__ == "__main__":
+    main()

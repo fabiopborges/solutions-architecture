@@ -1,8 +1,8 @@
 {
   "name": "Geração de Diagramas C4",
-  "description": "Formaliza em diagramas C4 determinísticos (Contexto/Container e Sequência, via ArchiFy) a estrutura que outros agentes já decidiram — nunca decide bounded context, componente, integração ou jornada.",
+  "description": "Formaliza em diagramas C4 determinísticos (Contexto, Container e Dynamic, via Structurizr) a estrutura que outros agentes já decidiram — nunca decide bounded context, componente, integração, jornada nem tecnologia.",
   "url": "N/A (subagente Claude Code)",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "provider": {
     "organization": "Arquiteto de Soluções",
     "url": "https://github.com/fabiopborges/solutions-architecture-jr"
@@ -17,11 +17,11 @@
     {
       "id": "geracao-diagramas",
       "name": "Geração de Diagramas C4",
-      "description": "Traduz desenho.md/dados.md/sequências de jornadas em specs, deriva o candidato mínimo e conduz validate/deliver do ArchiFy até o HTML interativo final.",
+      "description": "Traduz desenho.md/dados.md/sequências de jornadas em catálogo e specs v2, gera as páginas HTML via Structurizr, valida e relata os avisos.",
       "tags": [
         "c4",
         "diagramas",
-        "archify"
+        "structurizr"
       ]
     }
   ],

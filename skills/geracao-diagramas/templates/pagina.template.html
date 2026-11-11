@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITULO_PAGINA}}</title>
+<style>
+  :root{
+    color-scheme:light;
+    --bg:#ffffff; --surface:#ffffff; --text:#1c2330; --muted:#5b6678; --line:#dde2ea;
+    --accent:#1168bd; --soft:#eef4fc; --warn-bg:#fff6e5; --warn-b:#e0a100; --canvas:#ffffff;
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0d1117; --surface:#161b22; --text:#e6eaf0; --muted:#9aa6b8; --line:#2a3443;
+    --accent:#7ab0ff; --soft:#1c2b4d; --warn-bg:#2e2410; --warn-b:#e0a100; --canvas:#111111;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:1280px;margin:0 auto;padding:0 16px}
+  header{padding:10px 16px 0;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h1{font-size:20px;margin:0}
+  header .crumb{order:2;margin-left:auto}
+  .crumb{color:var(--muted);font-size:13px;letter-spacing:.02em}
+  h1{line-height:1.25}
+  h1 small{font-size:14px;color:var(--muted);font-weight:500}
+  .lead{color:var(--muted);max-width:75ch;margin:0 0 16px}
+  button{background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;min-height:34px}
+  button:hover{border-color:var(--accent)}
+  button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  button[aria-pressed="true"]{border-color:var(--accent);background:var(--soft)}
+  section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;margin:16px 0}
+  h2{font-size:18px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 10px}
+  .toolbar .sep{flex:1}
+  .grp{display:inline-flex;gap:0}
+  .grp button:first-child{border-radius:8px 0 0 8px}
+  .grp button:last-child{border-radius:0 8px 8px 0;margin-left:-1px}
+  .zoomlbl{min-width:52px;text-align:center;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+  figure{margin:0}
+  #viewport{position:relative;height:calc(100vh - 150px);height:calc(100dvh - 150px);min-height:520px;border:1px solid var(--line);border-radius:8px;background:var(--canvas);overflow:hidden;touch-action:none;cursor:grab}
+  #viewport.drag{cursor:grabbing}
+  #viewport svg{display:block;width:100%;height:100%;user-select:none}
+  #viewport svg .structurizrNavigation,#viewport svg .structurizrZoom{display:none}
+  #viewport svg text{font-family:"Open Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  figcaption{margin-top:10px;font-size:13px;color:var(--muted)}
+  figcaption b{color:var(--text)}
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .legend{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px 28px;font-size:13px}
+  .legend h3{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 6px}
+  .legend ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
+  .legend li{display:flex;align-items:center;gap:8px}
+  .legend li small{color:var(--muted)}
+  .sw{flex:none;width:22px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.25)}
+  .sw.pessoa{border-radius:7px 7px 3px 3px;background:#08427b;border-color:#08427b}
+  .sw.novo{background:#1168bd;border-color:#1168bd}
+  .sw.reuso{background:#8ec2f2;border-color:#5a9fd8}
+  .sw.exist{background:#a8a8a8;border-color:#888}
+  .sw.alt{background:#e76f51;border-color:#b5533a}
+  .sw.f-api{clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);background:var(--muted);border:0}
+  .sw.f-armaz{border-radius:50%/35%;background:var(--muted);border:0}
+  .sw.f-mens{border-radius:3px 9px 9px 3px;background:var(--muted);border:0}
+  .sw.f-web{border:2px solid var(--muted);border-top-width:5px;background:transparent}
+  .sw.f-mov{width:12px;height:18px;border:2px solid var(--muted);border-radius:3px;background:transparent}
+  .sw.fr{background:transparent;border:2px solid #1168bd}
+  .sw.bc{background:transparent;border:2px dashed #888}
+  .ln{flex:none;width:30px;border-top:3px solid var(--muted)}
+  .ln.as{border-top-style:dashed}
+  .ln.cond{border-top-color:#a35f00}
+  .steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  .steps li{counter-increment:s;display:grid;grid-template-columns:32px 1fr;gap:10px}
+  .steps li::before{content:counter(s);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:600;font-size:13px}
+  .steps b{display:block}
+  .note code,.steps code{font-size:.92em}
+  .note{background:var(--warn-bg);border:1px solid var(--warn-b);border-radius:8px;padding:12px 14px;margin-top:14px;font-size:14px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+  .tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
+  .tag.async{border-color:var(--accent);color:var(--accent)}
+  .tag.cond{border-color:var(--warn-b);color:var(--warn-b)}
+  .scroll{overflow-x:auto}
+  details{margin-top:8px}
+  summary{cursor:pointer;color:var(--accent)}
+  pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;overflow:auto;font-size:12.5px}
+  code{font-size:.92em}
+  ul.chk{padding-left:20px;margin:0}
+  footer{max-width:1280px;margin:0 auto;padding:8px 16px 40px;color:var(--muted);font-size:13px}
+  /* área de visualização ampliada */
+  .stage{background:var(--surface);border-bottom:1px solid var(--line);border-top:1px solid var(--line);padding:10px 12px 12px;margin-top:8px}
+  .stage .toolbar{margin-bottom:8px}
+  .stagegrid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:12px;align-items:start}
+  .stagegrid.nolegend{grid-template-columns:minmax(0,1fr)}
+  .stagegrid.nolegend aside{display:none}
+  aside{max-height:calc(100dvh - 150px);overflow:auto;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px}
+  aside h2{font-size:14px;margin:0 0 8px}
+  aside .legend{margin-top:0;grid-template-columns:1fr;gap:14px}
+  .stage figcaption{margin-top:8px}
+  .stage:fullscreen{background:var(--bg);padding:10px 12px;overflow:auto}
+  .stage:fullscreen #viewport{height:calc(100dvh - 120px)}
+  .stage:fullscreen aside{max-height:calc(100dvh - 120px)}
+  @media (max-width:1000px){ .stagegrid{grid-template-columns:minmax(0,1fr)} aside{max-height:none} }
+  @media (max-width:600px){ header h1{font-size:18px} section{padding:14px} #viewport{height:70vh;min-height:380px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>{{H1}} <small>· C4 model, Structurizr</small></h1>
+  <div class="crumb">{{CRUMB}}</div>
+</header>
+
+<div class="stage" id="stage">
+  <div class="toolbar" role="toolbar" aria-label="Controles do diagrama">
+      <button id="tab-c" aria-pressed="true">{{ROTULO_ABA}}</button>
+      <button id="tab-d" aria-pressed="false">Dynamic diagram</button>
+      <span class="grp" role="group" aria-label="Layout"><button id="lay-v" aria-pressed="true" title="Layout vertical (padrão)">Vertical</button><button id="lay-h" aria-pressed="false" title="Layout horizontal, esquerda para direita">Horizontal</button></span>
+      <span class="sep"></span>
+      <button id="z-out" aria-label="Diminuir zoom" title="Diminuir (tecla −)">−</button>
+      <span class="zoomlbl" id="z-lbl" aria-live="polite">100%</span>
+      <button id="z-in" aria-label="Aumentar zoom" title="Aumentar (tecla +)">+</button>
+      <button id="z-fit" title="Ajustar à tela (tecla 0)">Ajustar</button>
+      <button id="z-100" title="Tamanho real, 1 unidade = 1 pixel (tecla 1)">Tamanho real</button>
+      <button id="t-theme" aria-pressed="false" title="Alternar tema claro/escuro">Tema escuro</button>
+      <button id="t-legend" aria-pressed="true" title="Mostrar/ocultar a legenda">Legenda</button>
+      <button id="t-full" title="Tela cheia (tecla F)">Tela cheia</button>
+      <button id="t-save" title="Baixar o diagrama atual como SVG">Baixar SVG</button>
+    </div>
+
+    
+  <div class="stagegrid" id="stagegrid">
+    <div>
+      <figure>
+      <div id="viewport" tabindex="0" role="group" aria-label="Diagrama; use + e − para zoom, setas para mover, 0 para ajustar"></div>
+      <figcaption id="cap"></figcaption>
+    </figure>
+      <p class="hint">Roda do mouse = zoom · arrastar = mover · duplo clique = ajustar · teclado: <b>+</b> <b>−</b> <b>0</b> (ajustar) <b>1</b> (tamanho real) <b>F</b> (tela cheia) e setas. Dois dedos no celular: pinça.</p>
+    </div>
+    <aside aria-label="Legenda">
+      <h2>Legenda</h2>
+      <div class="legend" aria-label="Chave da notação">
+{{LEGENDA}}
+    </div>
+    </aside>
+  </div>
+</div>
+
+<main>
+  <section>
+    <h2>Contexto</h2>
+    <p class="sub">{{CONTEXTO}}</p>
+  </section>
+{{LEITURA}}{{SUPOSICOES}}
+  <section>
+    <h2>Componentes</h2>
+    <p class="sub" id="sub-comp"></p>
+    <div class="scroll"><table id="tbl-comp"><thead><tr><th>Componente</th><th>Status</th><th>Tecnologia</th><th>Fronteira</th><th>Responsabilidade</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Conexões</h2>
+    <p class="sub" id="sub-con"></p>
+    <div class="scroll"><table id="tbl-con"><thead><tr><th>#</th><th>De</th><th>Para</th><th>O que acontece</th><th>Tecnologia / protocolo</th><th>Modo</th></tr></thead><tbody></tbody></table></div>
+  </section>
+{{GLOSSARIO}}
+  <section>
+    <h2>Avisos do gerador</h2>
+    <p class="sub">Pontos que o gerador não resolve sozinho. Lista sempre exibida, mesmo vazia.</p>
+{{AVISOS}}
+  </section>
+
+  <section>
+    <h2>Aderência ao C4 model</h2>
+    <p class="sub">Itens medidos no spec desta página (não são afirmações escritas à mão). Referência: c4model.com (diagrams, container, dynamic, notation).</p>
+    <ul class="chk">
+{{ADERENCIA}}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Fonte Structurizr (DSL)</h2>
+    <p class="sub">Arquivo <code>workspace.dsl</code>, gerado do spec JSON por <code>scripts/spec_para_dsl.py</code>. Os diagramas desta página são gerados dele.</p>
+    <details><summary>Ver código</summary><pre>{{DSL}}</pre></details>
+  </section>
+</main>
+
+<footer>Origem: <code>{{ORIGEM}}</code>, convertido para Structurizr DSL. O gerador só formaliza o que o spec diz; não decide arquitetura. Página autocontida: os diagramas são SVG embutidos, funciona offline.</footer>
+
+{{SVGS}}
+
+<script>
+const $ = s => document.querySelector(s);
+const TITLES = {{TITLES}};
+
+/* ---------- dados das tabelas (gerados do spec) ---------- */
+const spec = {{SPEC_JSON}};
+const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
+$("#sub-comp").textContent = spec.textos.comp;
+$("#sub-con").textContent = spec.textos.con;
+$("#tbl-comp tbody").innerHTML =
+  spec.componentes.map(c => `<tr><td><b>${esc(c.nome)}</b></td><td>${esc(c.status)}</td><td>${esc(c.tec)}</td><td>${esc(c.grupo)}</td><td>${esc(c.descr)}</td></tr>`).join("") +
+  spec.atores.map(a => `<tr><td><b>${esc(a.nome)}</b></td><td>${esc(a.status)}</td><td>${esc(a.tec)}</td><td>—</td><td>${esc(a.papel)}</td></tr>`).join("");
+$("#tbl-con tbody").innerHTML = spec.conexoes.map((c,i) =>
+  `<tr><td>${i+1}</td><td>${esc(c.de)}</td><td>${esc(c.para)}</td><td>${esc(c.rotulo)}</td><td>${esc(c.tec)}</td>` +
+  `<td><span class="tag ${c.assinc?"async":""}">${c.assinc?"assíncrono":"síncrono"}</span> ${c.cond?`<span class="tag cond">condicional: ${esc(c.cond)}</span>`:""}</td></tr>`).join("");
+
+/* ---------- estado ---------- */
+const NS = "http://www.w3.org/2000/svg";
+let view = "{{BASE}}", layout = "v", theme = "light", svg = null, base = null, vb = null, fitScale = 1;
+try { const t = localStorage.getItem("c4-theme"); if (t === "dark") theme = "dark"; } catch(e){}
+
+function applyTheme(){
+  document.documentElement.dataset.theme = theme;
+  const b = $("#t-theme"); b.setAttribute("aria-pressed", theme === "dark"); b.textContent = theme === "dark" ? "Tema claro" : "Tema escuro";
+}
+
+/* ---------- carga do SVG da visão/tema atuais ---------- */
+function mount(keepView){
+  const tpl = document.getElementById(`svg-${view}${layout === "h" ? "-h" : ""}-${theme}`);
+  const host = $("#viewport");
+  host.innerHTML = tpl.innerHTML;
+  svg = host.querySelector("svg");
+  svg.setAttribute("role","img"); svg.setAttribute("aria-label", TITLES[view].title);
+  const g = svg.querySelector(".joint-layers");
+  const bb = g.getBBox(), pad = 40;
+  base = {x:bb.x-pad, y:bb.y-pad, w:bb.width+2*pad, h:bb.height+2*pad};
+  if (!keepView || !vb) vb = {...base};
+  apply();
+  $("#cap").innerHTML = `<b>${TITLES[view].title}</b><br>${TITLES[view].desc}`;
+}
+function pxPerUnit(){ const r = svg.getBoundingClientRect(); return Math.min(r.width/vb.w, r.height/vb.h); }
+function fitPx(){ const r = svg.getBoundingClientRect(); return Math.min(r.width/base.w, r.height/base.h); }
+function apply(){
+  svg.setAttribute("viewBox", `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+  svg.setAttribute("preserveAspectRatio","xMidYMid meet");
+  $("#z-lbl").textContent = Math.round(pxPerUnit()/fitPx()*100) + "%";
+}
+function zoomAt(f, cx, cy){ // cx,cy em unidades do svg
+  const rel = vb.w / base.w, nr = Math.min(Math.max(rel/f, 0.04), 1.2);   // 1/1.2 .. 25x
+  f = rel / nr;
+  vb = {x: cx - (cx - vb.x)/f, y: cy - (cy - vb.y)/f, w: vb.w/f, h: vb.h/f};
+  apply();
+}
+function center(){ return {x: vb.x + vb.w/2, y: vb.y + vb.h/2}; }
+function toSvg(ev){
+  const r = svg.getBoundingClientRect(), s = pxPerUnit();
+  const ox = (r.width - vb.w*s)/2, oy = (r.height - vb.h*s)/2;
+  return {x: vb.x + (ev.clientX - r.left - ox)/s, y: vb.y + (ev.clientY - r.top - oy)/s};
+}
+const fit = () => { vb = {...base}; apply(); };
+function actual(){ const c = center(), r = svg.getBoundingClientRect(); const w = r.width, h = r.height;
+  const s = 1; vb = {x:c.x - w/2/s, y:c.y - h/2/s, w:w/s, h:h/s}; apply(); }
+
+/* ---------- interação ---------- */
+const host = $("#viewport");
+host.addEventListener("wheel", ev => { ev.preventDefault(); const p = toSvg(ev); zoomAt(ev.deltaY < 0 ? 1.15 : 1/1.15, p.x, p.y); }, {passive:false});
+const ptrs = new Map(); let last = null, pinch = null;
+host.addEventListener("pointerdown", ev => { host.setPointerCapture(ev.pointerId); ptrs.set(ev.pointerId, ev); host.classList.add("drag"); last = {x:ev.clientX, y:ev.clientY}; });
+host.addEventListener("pointermove", ev => {
+  if (!ptrs.has(ev.pointerId)) return; ptrs.set(ev.pointerId, ev);
+  if (ptrs.size === 2){
+    const [a,b] = [...ptrs.values()], d = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    if (pinch){ const p = toSvg({clientX:(a.clientX+b.clientX)/2, clientY:(a.clientY+b.clientY)/2}); zoomAt(d/pinch, p.x, p.y); }
+    pinch = d; return;
+  }
+  const s = pxPerUnit(); vb.x -= (ev.clientX - last.x)/s; vb.y -= (ev.clientY - last.y)/s;
+  last = {x:ev.clientX, y:ev.clientY}; apply();
+});
+const up = ev => { ptrs.delete(ev.pointerId); pinch = null; if (!ptrs.size) host.classList.remove("drag"); else last = null; if (ptrs.size===1){ const r=[...ptrs.values()][0]; last={x:r.clientX,y:r.clientY}; } };
+host.addEventListener("pointerup", up); host.addEventListener("pointercancel", up);
+host.addEventListener("dblclick", fit);
+host.addEventListener("keydown", ev => {
+  const c = center(), step = vb.w*0.08;
+  if (ev.key === "+" || ev.key === "=") zoomAt(1.25, c.x, c.y);
+  else if (ev.key === "-" || ev.key === "_") zoomAt(1/1.25, c.x, c.y);
+  else if (ev.key === "0") fit(); else if (ev.key === "1") actual();
+  else if (ev.key === "ArrowLeft") { vb.x -= step; apply(); } else if (ev.key === "ArrowRight") { vb.x += step; apply(); }
+  else if (ev.key === "ArrowUp") { vb.y -= step; apply(); } else if (ev.key === "ArrowDown") { vb.y += step; apply(); }
+  else return; ev.preventDefault();
+});
+$("#z-in").onclick  = () => { const c = center(); zoomAt(1.25, c.x, c.y); };
+$("#z-out").onclick = () => { const c = center(); zoomAt(1/1.25, c.x, c.y); };
+$("#z-fit").onclick = fit; $("#z-100").onclick = actual;
+function setView(v){ view = v; vb = null; $("#tab-c").setAttribute("aria-pressed", v==="{{BASE}}"); $("#tab-d").setAttribute("aria-pressed", v==="dynamic"); mount(false); }
+function setLayout(l){ layout = l; vb = null; $("#lay-v").setAttribute("aria-pressed", l==="v"); $("#lay-h").setAttribute("aria-pressed", l==="h"); try{ localStorage.setItem("c4-layout", l); }catch(e){} mount(false); }
+$("#lay-v").onclick = () => setLayout("v"); $("#lay-h").onclick = () => setLayout("h");
+try { if (localStorage.getItem("c4-layout") === "h") { layout = "h"; $("#lay-v").setAttribute("aria-pressed","false"); $("#lay-h").setAttribute("aria-pressed","true"); } } catch(e){}
+$("#tab-c").onclick = () => setView("{{BASE}}"); $("#tab-d").onclick = () => setView("dynamic");
+$("#t-theme").onclick = () => { theme = theme === "dark" ? "light" : "dark"; try{ localStorage.setItem("c4-theme", theme); }catch(e){} applyTheme(); mount(true); };
+$("#t-save").onclick = () => {
+  const c = svg.cloneNode(true); c.setAttribute("xmlns", NS); c.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
+  c.setAttribute("viewBox", `${base.x} ${base.y} ${base.w} ${base.h}`); c.setAttribute("width", Math.round(base.w)); c.setAttribute("height", Math.round(base.h));
+  c.removeAttribute("style");
+  const bg = document.createElementNS(NS,"rect"); bg.setAttribute("x",base.x); bg.setAttribute("y",base.y); bg.setAttribute("width",base.w); bg.setAttribute("height",base.h); bg.setAttribute("fill", theme==="dark" ? "#111111" : "#ffffff"); c.insertBefore(bg, c.firstChild);
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(c)], {type:"image/svg+xml"}));
+  a.download = `{{SLUG}}-${view}-${theme}.svg`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+};
+new ResizeObserver(() => { if (svg && base) apply(); }).observe($("#viewport"));   // legenda, tela cheia, janela
+$("#t-legend").onclick = e => { const g = $("#stagegrid"); const off = g.classList.toggle("nolegend"); e.target.setAttribute("aria-pressed", !off); try{ localStorage.setItem("c4-legend", off ? "off" : "on"); }catch(x){} };
+try { if (localStorage.getItem("c4-legend") === "off") { $("#stagegrid").classList.add("nolegend"); $("#t-legend").setAttribute("aria-pressed","false"); } } catch(x){}
+function toggleFull(){ const s = $("#stage"); if (document.fullscreenElement) document.exitFullscreen(); else if (s.requestFullscreen) s.requestFullscreen(); }
+$("#t-full").onclick = toggleFull;
+if (!document.fullscreenEnabled) $("#t-full").style.display = "none";
+host.addEventListener("keydown", ev => { if (ev.key === "f" || ev.key === "F") { toggleFull(); ev.preventDefault(); } });
+
+if (!TITLES.dynamic) $("#tab-d").style.display = "none";   // sem journey_id não há Dynamic diagram
+applyTheme(); mount(false);
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Diagrama C4 v2",
+  "type": "object",
+  "required": ["titulo", "nivel"],
+  "properties": {
+    "titulo": { "type": "string", "minLength": 1 },
+    "subtitulo": { "type": "string" },
+    "nivel": { "enum": ["contexto", "container", "componente", "landscape", "dinamico", "deployment", "fluxo-dados"] },
+    "journey_id": { "type": "string" },
+    "foco_id": { "type": "string", "description": "Só nivel=componente: id do container cujos componentes internos são mostrados." },
+    "sistema": {
+      "type": "object",
+      "required": ["nome"],
+      "properties": { "nome": { "type": "string" }, "descricao": { "type": "string" } },
+      "additionalProperties": false
+    },
+    "leitura": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["titulo", "texto"],
+        "properties": { "titulo": { "type": "string" }, "texto": { "type": "string" } },
+        "additionalProperties": false
+      }
+    },
+    "nota": { "type": "string" },
+    "suposicoes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["titulo", "itens"],
+        "properties": { "titulo": { "type": "string" }, "itens": { "type": "array", "items": { "type": "string" } } },
+        "additionalProperties": false
+      }
+    },
+    "titulo_pagina": { "type": "string" },
+    "mensageria_modo": { "enum": ["explicita", "implicita"], "default": "explicita" },
+    "seta_mensageria": { "enum": ["iniciador", "fluxo"], "default": "iniciador" },
+    "glossario": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["sigla", "significado"],
+        "properties": { "sigla": { "type": "string" }, "significado": { "type": "string" } },
+        "additionalProperties": false
+      }
+    },
+    "atores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "nome", "tipo"],
+        "properties": {
+          "id": { "type": "string" },
+          "nome": { "type": "string" },
+          "tipo": { "enum": ["usuario_externo", "usuario_interno", "sistema_externo"] },
+          "papel": { "type": "string" },
+          "status": { "enum": ["novo", "alterado", "reuso", "existente"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "fronteiras": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "nome"],
+        "properties": {
+          "id": { "type": "string" },
+          "nome": { "type": "string" },
+          "ambiente": { "type": "string" },
+          "pai_id": { "type": "string" },
+          "tipo": { "enum": ["bounded-context", "servico"], "default": "bounded-context" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "componentes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "nome", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "nome": { "type": "string" },
+          "status": { "enum": ["novo", "alterado", "reuso", "existente"] },
+          "tipo": { "type": "string" },
+          "descricao": { "type": "string" },
+          "tecnologia": { "type": "string" },
+          "forma": { "enum": ["caixa", "api", "app-web", "app-movel"], "default": "caixa" },
+          "armazenamento": { "enum": ["relacional", "documento", "cache", "objetos", "busca", "analitico"] },
+          "mensageria": { "enum": ["fila", "topico", "stream"] },
+          "broker": { "type": "string" },
+          "dono_id": { "type": "string" },
+          "retencao": { "type": "string" },
+          "sensibilidade": { "type": "string" },
+          "fronteira_id": { "type": "string" },
+          "container_id": { "type": "string", "description": "Só nivel=componente: id do container (foco_id) ao qual este componente interno pertence." }
+        },
+        "dependentRequired": { "broker": ["mensageria"] },
+        "not": { "required": ["armazenamento", "mensageria"] },
+        "additionalProperties": false
+      }
+    },
+    "conexoes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["de", "para", "rotulo"],
+        "properties": {
+          "de": { "type": "string" },
+          "para": { "type": "string" },
+          "rotulo": { "type": "string" },
+          "tecnologia": { "type": "string" },
+          "assincrona": { "type": "boolean", "default": false },
+          "acesso": { "enum": ["chama", "le", "grava", "publica", "consome"], "default": "chama" },
+          "via": { "type": "string" },
+          "condicao": { "type": "string" },
+          "journey_id": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

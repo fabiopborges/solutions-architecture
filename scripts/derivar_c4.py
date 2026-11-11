@@ -8,7 +8,11 @@ montar_candidato_arquitetura_archify.py consome (componentes[] + conexoes[])
 — nenhuma mudança necessária no renderer.
 
 Uso:
-    python3 derivar_c4.py CATALOGO.json SEQUENCIA1.json [SEQUENCIA2.json ...] --saida-dir DIR
+    python3 derivar_c4.py CATALOGO.json SEQUENCIA1.json [SEQUENCIA2.json ...] --saida-dir DIR [--formato v2]
+
+--formato v2 (demandas novas; gerador Structurizr, docs/diagrams/c4-schema-v2.md): grava só os specs de
+Container (por jornada + geral) em formato v2. O Contexto NÃO é derivado aqui: o gerador o produz do Container
+geral com `gerar_pagina_c4.py --nivel contexto`. Sem o flag, o comportamento é o antigo (v1, ArchiFy).
 """
 import argparse
 import json
@@ -42,12 +46,15 @@ def mensagens_projetaveis(sequencia):
     return sorted(projetaveis, key=lambda m: m["ordem"])
 
 
-def derivar_conexoes(mensagens, journey_id_por_msg):
-    """Dedup por (de,para,protocolo), primeira ocorrência define o rótulo (regras 2-3)."""
+def derivar_conexoes(mensagens, journey_id_por_msg, v2=False):
+    """Dedup por (de,para,protocolo), primeira ocorrência define o rótulo (regras 2-3).
+    Com v2=True, a conexão leva também tecnologia (tecnologia da mensagem, senão o protocolo), acesso, via e condicao."""
     vistos = {}
     ordem_final = []
     for msg in mensagens:
         chave = (msg["de"], msg["para"], msg.get("protocolo"))
+        if v2:   # no v2 "lê" e "grava" entre o mesmo par são relações diferentes, mesmo sem protocolo
+            chave = (msg["de"], msg["para"], msg.get("protocolo") or msg.get("tecnologia"), msg.get("acesso"))
         jid = journey_id_por_msg[id(msg)]
         if chave not in vistos:
             vistos[chave] = {
@@ -57,6 +64,13 @@ def derivar_conexoes(mensagens, journey_id_por_msg):
                 "assincrona": msg.get("assincrona", False),
                 "journey_id": [jid],
             }
+            if v2:
+                tec = msg.get("tecnologia") or msg.get("protocolo")
+                if tec:
+                    vistos[chave]["tecnologia"] = tec
+                for campo in ("acesso", "via", "condicao"):
+                    if msg.get(campo):
+                        vistos[chave][campo] = msg[campo]
             ordem_final.append(chave)
         else:
             if jid not in vistos[chave]["journey_id"]:
@@ -120,6 +134,92 @@ def montar_spec_derivado(titulo, nivel, subtitulo, catalogo_indice, conexoes, jo
     return spec, faltando_catalogo
 
 
+CAMPOS_TOPO_CATALOGO = ("sistema", "glossario", "titulo_pagina", "mensageria_modo", "seta_mensageria")
+CAMPOS_TOPO_SEQUENCIA = ("leitura", "nota", "titulo_pagina")
+
+
+def montar_spec_v2(titulo, subtitulo, catalogo, conexoes, sequencia=None, journey_id=None):
+    """Spec v2 de Container. Nunca inventa: participante fora do catálogo NÃO é importado (o gerador recusa a
+    conexão até o catálogo ou a sequência ser corrigido). Ordem de atores/componentes = ordem do catálogo,
+    para o DSL (e portanto o layout) ser determinístico."""
+    usados = participantes_usados(conexoes) | {c["via"] for c in conexoes if c.get("via")}
+    atores = [a for a in catalogo.get("atores", []) if a["id"] in usados]
+    comps = [c for c in catalogo.get("componentes", []) if c["id"] in usados]
+    no_catalogo = {a["id"] for a in catalogo.get("atores", [])} | {c["id"] for c in catalogo.get("componentes", [])}
+    faltando = sorted(usados - no_catalogo)
+    fronteiras = list(catalogo.get("fronteiras", []))
+    presentes = {x["id"] for x in atores + comps + fronteiras}
+    avisos = []
+    comps = [dict(c) for c in comps]
+    for c in comps:
+        if c.get("dono_id") and c["dono_id"] not in presentes:
+            avisos.append(f"[DONO-FORA-DA-VISAO] dono_id '{c.pop('dono_id')}' de '{c['id']}' não está nesta visão; o campo foi omitido")
+    spec = {"titulo": titulo, "nivel": "container"}
+    if subtitulo:
+        spec["subtitulo"] = subtitulo
+    if journey_id:
+        spec["journey_id"] = journey_id
+    for k in CAMPOS_TOPO_CATALOGO:
+        if k in catalogo:
+            spec[k] = catalogo[k]
+    sup = list(catalogo.get("suposicoes", []))
+    if sequencia:
+        for k in CAMPOS_TOPO_SEQUENCIA:
+            if k in sequencia:
+                spec[k] = sequencia[k]
+        sup += sequencia.get("suposicoes", [])
+    if sup:
+        spec["suposicoes"] = sup
+    spec.update({"atores": atores, "fronteiras": fronteiras, "componentes": comps, "conexoes": conexoes})
+    return spec, faltando, avisos
+
+
+def main_v2(args):
+    catalogo = carregar_json(args.catalogo)
+    saida_dir = Path(args.saida_dir)
+    saida_dir.mkdir(parents=True, exist_ok=True)
+    base = (catalogo.get("sistema") or {}).get("nome") or args.titulo_base
+    ids_comp = {c["id"] for c in catalogo.get("componentes", [])}
+    usados_total, faltando_total, avisos_total = set(), set(), []
+    todas, jid_por_msg = [], {}
+    for caminho in args.sequencias:
+        seq = carregar_json(caminho)
+        jid = seq["journey_id"]
+        msgs = mensagens_projetaveis(seq)
+        conexoes = derivar_conexoes(msgs, {id(m): jid for m in msgs}, v2=True)
+        usados_total |= participantes_usados(conexoes)
+        spec, faltando, avisos = montar_spec_v2(f"{base} — Container — jornada {jid}", f"visão filtrada — jornada: {jid}",
+                                                catalogo, conexoes, sequencia=seq, journey_id=jid)
+        faltando_total |= set(faltando)
+        avisos_total += avisos
+        destino = saida_dir / f"c4-container-jornada-{jid}.json"
+        destino.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"[ok] {destino} ({len(spec['componentes'])} componentes, {len(conexoes)} conexões)")
+        for m in msgs:
+            todas.append(m)
+            jid_por_msg[id(m)] = jid
+    geral = derivar_conexoes(todas, jid_por_msg, v2=True)
+    spec, faltando, avisos = montar_spec_v2(f"{base} — Container — geral", "união de todas as jornadas", catalogo, geral)
+    faltando_total |= set(faltando)
+    avisos_total += avisos
+    destino = saida_dir / "c4-container.json"
+    destino.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"[ok] {destino} ({len(spec['componentes'])} componentes, {len(geral)} conexões)")
+    print("[info] Contexto: não derivado aqui; gere com `gerar_pagina_c4.py c4-container.json --nivel contexto`.")
+    print("\n=== Relatório de derivação ===")
+    orfaos = ids_comp - usados_total
+    for oid in sorted(orfaos):
+        print(f"[ORFAO] componente '{oid}' está no catálogo mas não aparece em nenhuma jornada — excluído dos diagramas.")
+    if not orfaos:
+        print("[ORFAO] nenhum.")
+    for fid in sorted(faltando_total):
+        print(f"[FALTA-CATALOGO] '{fid}' aparece numa sequência mas não está em catalogo-componentes.json — NÃO importado; o gerador recusará a conexão até a correção.")
+    if not faltando_total:
+        print("[FALTA-CATALOGO] nenhum.")
+    for a in avisos_total:
+        print(a)
+
+
 def derivar_contexto(spec_geral):
     """Colapsa componentes não-'Sistema' de cada fronteira num único nó (regra 6)."""
     por_fronteira = {}
@@ -178,7 +278,10 @@ def main():
     parser.add_argument("sequencias", nargs="+", help="sequencia-<jornada>_spec.json (um ou mais)")
     parser.add_argument("--saida-dir", required=True, help="pasta onde gravar os specs derivados")
     parser.add_argument("--titulo-base", default="Demanda", help="prefixo do título dos diagramas gerados")
+    parser.add_argument("--formato", choices=["v1", "v2"], default="v1", help="v2 = demandas novas (Structurizr); padrão v1 = legado (ArchiFy)")
     args = parser.parse_args()
+    if args.formato == "v2":
+        return main_v2(args)
 
     catalogo = carregar_json(args.catalogo)
     catalogo_indice = indice_por_id(catalogo)

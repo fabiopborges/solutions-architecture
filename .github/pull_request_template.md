@@ -11,8 +11,8 @@
 
 ## 🧪 Como isso foi testado?
 <!-- Descreva os testes que você realizou para verificar suas alterações. Forneça instruções para que possamos reproduzir. -->
-- **Configuração de teste utilizada:** <!-- Ex: Python 3 (stdlib), Node.js >= 18 para o ArchiFy vendorizado -->
-- **Comando ou script executado:** <!-- Ex: python3 scripts/derivar_c4.py ... | node skills/vendors/archify/archify/bin/archify.mjs validate architecture <spec>.json --quality showcase --json -->
+- **Configuração de teste utilizada:** <!-- Ex: Python 3, Docker e Google Chrome para o gerador Structurizr; Node.js >= 18 só para o ArchiFy legado -->
+- **Comando ou script executado:** <!-- Ex: python3 scripts/gerar_diagramas_demanda.py demandas/<nome> | cd scripts && python3 -m unittest discover -s testes -->
 - **Resultado esperado:**
 
 ## 📜 Acordo de Contribuição e Licenciamento

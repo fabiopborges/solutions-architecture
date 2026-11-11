@@ -1,0 +1,28 @@
+{
+  "titulo": "Loja Exemplo — Componente — API de Pedidos",
+  "subtitulo": "fixture sintética de teste (não é demanda real)",
+  "nivel": "componente",
+  "foco_id": "api_ped",
+  "sistema": { "nome": "Loja Exemplo", "descricao": "Sistema fictício usado só para testar o gerador." },
+  "glossario": [{ "sigla": "API", "significado": "Interface de programação de aplicações." }],
+  "atores": [
+    { "id": "cli", "nome": "Comprador", "tipo": "usuario_externo", "papel": "Faz pedidos na loja." },
+    { "id": "pgto", "nome": "Gateway de Pagamento", "tipo": "sistema_externo", "papel": "Processa cobranças.", "status": "existente" }
+  ],
+  "componentes": [
+    { "id": "web", "nome": "Loja Web", "status": "novo", "forma": "app-web", "tecnologia": "SPA em TypeScript" },
+    { "id": "api_ped", "nome": "API de Pedidos", "status": "novo", "forma": "api", "tecnologia": "Serviço HTTP" },
+    { "id": "ctl", "nome": "Controlador de Pedidos", "status": "novo", "tecnologia": "Controlador REST", "descricao": "Recebe e valida pedidos.", "container_id": "api_ped" },
+    { "id": "svc", "nome": "Serviço de Confirmação", "status": "novo", "tecnologia": "Classe de domínio", "descricao": "Aplica regras de confirmação.", "container_id": "api_ped" },
+    { "id": "db_ped", "nome": "Base de Pedidos", "status": "novo", "armazenamento": "relacional", "tecnologia": "PostgreSQL" },
+    { "id": "solto", "nome": "Painel de Relatórios", "status": "existente", "tecnologia": "BI" }
+  ],
+  "conexoes": [
+    { "de": "cli", "para": "web", "rotulo": "Faz pedidos", "tecnologia": "HTTPS" },
+    { "de": "web", "para": "ctl", "rotulo": "Envia pedido", "tecnologia": "JSON/HTTPS" },
+    { "de": "ctl", "para": "svc", "rotulo": "Delega confirmação", "tecnologia": "Chamada local" },
+    { "de": "svc", "para": "db_ped", "rotulo": "Grava pedido", "tecnologia": "SQL", "acesso": "grava" },
+    { "de": "svc", "para": "pgto", "rotulo": "Solicita cobrança", "tecnologia": "HTTPS" },
+    { "de": "solto", "para": "api_ped", "rotulo": "Consulta pedidos", "tecnologia": "HTTPS" }
+  ]
+}

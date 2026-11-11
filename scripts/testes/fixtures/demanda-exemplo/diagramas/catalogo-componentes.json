@@ -1,0 +1,100 @@
+{
+  "sistema": {
+    "nome": "Loja Exemplo",
+    "descricao": "Sistema fictício usado só para testar o gerador."
+  },
+  "glossario": [
+    {
+      "sigla": "BC",
+      "significado": "Bounded context (DDD)."
+    }
+  ],
+  "suposicoes": [
+    {
+      "titulo": "Pagamento",
+      "itens": [
+        "O gateway de pagamento é tratado como sistema existente (premissa de teste)."
+      ]
+    }
+  ],
+  "atores": [
+    {
+      "id": "cli",
+      "nome": "Comprador",
+      "tipo": "usuario_externo",
+      "papel": "Faz pedidos na loja."
+    },
+    {
+      "id": "pgto",
+      "nome": "Gateway de Pagamento",
+      "tipo": "sistema_externo",
+      "papel": "Processa cobranças.",
+      "status": "existente"
+    }
+  ],
+  "fronteiras": [
+    {
+      "id": "f_ped",
+      "nome": "BC Pedidos"
+    },
+    {
+      "id": "f_ped_svc",
+      "nome": "Serviço de Pedidos",
+      "tipo": "servico",
+      "pai_id": "f_ped"
+    },
+    {
+      "id": "f_ent",
+      "nome": "BC Entregas"
+    }
+  ],
+  "componentes": [
+    {
+      "id": "web",
+      "nome": "Loja Web",
+      "status": "novo",
+      "forma": "app-web",
+      "tecnologia": "SPA em TypeScript"
+    },
+    {
+      "id": "api_ped",
+      "nome": "API de Pedidos",
+      "status": "novo",
+      "forma": "api",
+      "tecnologia": "Serviço HTTP",
+      "fronteira_id": "f_ped_svc",
+      "descricao": "Recebe e confirma pedidos."
+    },
+    {
+      "id": "db_ped",
+      "nome": "Base de Pedidos",
+      "status": "novo",
+      "armazenamento": "relacional",
+      "tecnologia": "PostgreSQL",
+      "fronteira_id": "f_ped_svc",
+      "retencao": "5 anos"
+    },
+    {
+      "id": "t_ped",
+      "nome": "Tópico PedidoConfirmado",
+      "status": "novo",
+      "mensageria": "topico",
+      "broker": "Kafka",
+      "fronteira_id": "f_ped",
+      "dono_id": "f_ped"
+    },
+    {
+      "id": "ent",
+      "nome": "Serviço de Entregas",
+      "status": "alterado",
+      "tecnologia": "Serviço de eventos",
+      "fronteira_id": "f_ent"
+    },
+    {
+      "id": "legado_orfao",
+      "nome": "Relatório Legado",
+      "status": "existente",
+      "tecnologia": "Batch"
+    }
+  ]
+}

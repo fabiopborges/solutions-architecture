@@ -1,0 +1,34 @@
+{
+  "titulo": "Loja Exemplo — Container — jornada pedido-confirmado",
+  "subtitulo": "fixture sintética de teste (não é demanda real)",
+  "nivel": "container",
+  "journey_id": "pedido-confirmado",
+  "sistema": { "nome": "Loja Exemplo", "descricao": "Sistema fictício usado só para testar o gerador." },
+  "glossario": [{ "sigla": "BC", "significado": "Bounded context (DDD)." }],
+  "atores": [
+    { "id": "cli", "nome": "Comprador", "tipo": "usuario_externo", "papel": "Faz pedidos na loja." },
+    { "id": "pgto", "nome": "Gateway de Pagamento", "tipo": "sistema_externo", "papel": "Processa cobranças.", "status": "existente" }
+  ],
+  "fronteiras": [
+    { "id": "f_ped", "nome": "BC Pedidos" },
+    { "id": "f_ped_svc", "nome": "Serviço de Pedidos", "tipo": "servico", "pai_id": "f_ped" },
+    { "id": "f_ent", "nome": "BC Entregas" }
+  ],
+  "componentes": [
+    { "id": "web", "nome": "Loja Web", "status": "novo", "forma": "app-web", "tecnologia": "SPA em TypeScript" },
+    { "id": "api_ped", "nome": "API de Pedidos", "status": "novo", "forma": "api", "tecnologia": "Serviço HTTP", "fronteira_id": "f_ped_svc", "descricao": "Recebe e confirma pedidos." },
+    { "id": "db_ped", "nome": "Base de Pedidos", "status": "novo", "armazenamento": "relacional", "tecnologia": "PostgreSQL", "fronteira_id": "f_ped_svc", "retencao": "5 anos", "sensibilidade": "dado pessoal" },
+    { "id": "t_ped", "nome": "Tópico PedidoConfirmado", "status": "novo", "mensageria": "topico", "broker": "Kafka", "fronteira_id": "f_ped", "dono_id": "f_ped" },
+    { "id": "ent", "nome": "Serviço de Entregas", "status": "alterado", "tecnologia": "Serviço de eventos", "fronteira_id": "f_ent" },
+    { "id": "cache", "nome": "Cache de Catálogo", "status": "reuso", "armazenamento": "cache", "tecnologia": "Redis" }
+  ],
+  "conexoes": [
+    { "de": "cli", "para": "web", "rotulo": "Faz pedido", "tecnologia": "HTTPS" },
+    { "de": "web", "para": "api_ped", "rotulo": "Envia pedido", "tecnologia": "REST/JSON" },
+    { "de": "api_ped", "para": "db_ped", "rotulo": "Grava pedido", "tecnologia": "SQL", "acesso": "grava" },
+    { "de": "api_ped", "para": "cache", "rotulo": "Lê catálogo", "tecnologia": "Redis protocol", "acesso": "le" },
+    { "de": "api_ped", "para": "pgto", "rotulo": "Cobra pedido", "tecnologia": "HTTPS", "condicao": "Q7" },
+    { "de": "api_ped", "para": "t_ped", "rotulo": "Publica pedido confirmado", "tecnologia": "Kafka producer", "acesso": "publica" },
+    { "de": "ent", "para": "t_ped", "rotulo": "Consome pedido confirmado", "tecnologia": "Kafka consumer", "acesso": "consome" }
+  ]
+}

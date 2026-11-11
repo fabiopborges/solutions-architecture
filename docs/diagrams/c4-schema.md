@@ -1,5 +1,7 @@
 # Schema de diagrama C4 — autoral, agnóstico de provedor
 
+> **Legado (v1).** Este formato alimenta o pipeline ArchiFy e vale só para demandas anteriores a 2026-11-11. Demandas novas usam `c4-schema-v2.md` (Structurizr), um superconjunto deste formato.
+
 Formato de dados que representa um diagrama C4 (nível Contexto, Container ou Componente), pensado para ser gerado por qualquer agente da cadeia (hoje: Desenho de Arquitetura, futuramente também Jornadas do Usuário) e consumido pelo pipeline de geração (`scripts/`, MVP 3). O renderer padrão é o ArchiFy vendorizado, chamado pelo agente `geracao-diagramas` via `montar_candidato_arquitetura_archify.py`/`montar_candidato_sequencia_archify.py` + `node archify.mjs validate`/`deliver` diretamente (ver `scripts/README.md`, seção "O agente completa o fluxo"). A geração de `.drawio` foi eliminada do projeto em 2026-08-16.
 
 Este schema é **inspirado em padrões estruturais comuns de ferramentas de diagramação C4** (separação ator/fronteira/componente/conexão; status→cor; rótulo obrigatório; síncrono/assíncrono), mas a nomenclatura, os enums e os exemplos abaixo são **integralmente autorais deste projeto** — nenhum termo, ID de projeto ou nome de empresa de qualquer referência externa aparece aqui.

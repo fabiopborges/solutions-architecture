@@ -1,0 +1,28 @@
+{
+  "titulo": "Loja Exemplo — Contexto",
+  "subtitulo": "fixture sintética de teste (não é demanda real)",
+  "nivel": "contexto",
+  "sistema": { "nome": "Loja Exemplo", "descricao": "Sistema fictício usado só para testar o gerador." },
+  "atores": [
+    { "id": "cli", "nome": "Comprador", "tipo": "usuario_externo", "papel": "Faz pedidos na loja." },
+    { "id": "adm", "nome": "Operador da loja", "tipo": "usuario_interno", "papel": "Acompanha pedidos e entregas." },
+    { "id": "pgto", "nome": "Gateway de Pagamento", "tipo": "sistema_externo", "papel": "Processa cobranças.", "status": "existente" },
+    { "id": "transp", "nome": "Transportadora", "tipo": "sistema_externo", "papel": "Entrega os pedidos.", "status": "existente" },
+    { "id": "banco", "nome": "Banco emissor", "tipo": "sistema_externo", "papel": "Autoriza pagamentos.", "status": "existente" }
+  ],
+  "componentes": [
+    { "id": "web", "nome": "Loja Web", "status": "novo", "tecnologia": "SPA" },
+    { "id": "api", "nome": "API de Pedidos", "status": "novo", "tecnologia": "Serviço HTTP" },
+    { "id": "ent", "nome": "Serviço de Entregas", "status": "alterado", "tecnologia": "Serviço de eventos" }
+  ],
+  "conexoes": [
+    { "de": "cli", "para": "web", "rotulo": "Navega e faz pedidos", "tecnologia": "HTTPS" },
+    { "de": "cli", "para": "api", "rotulo": "Consulta pedido", "tecnologia": "REST" },
+    { "de": "web", "para": "api", "rotulo": "Envia pedido", "tecnologia": "REST/JSON" },
+    { "de": "api", "para": "pgto", "rotulo": "Cobra pedido", "tecnologia": "HTTPS", "condicao": "Q7" },
+    { "de": "pgto", "para": "banco", "rotulo": "Autoriza cobrança", "tecnologia": "ISO 8583" },
+    { "de": "ent", "para": "transp", "rotulo": "Solicita coleta", "tecnologia": "HTTPS", "assincrona": true },
+    { "de": "transp", "para": "ent", "rotulo": "Informa status da entrega", "tecnologia": "Webhook", "assincrona": true },
+    { "de": "transp", "para": "ent", "rotulo": "Informa extravio", "tecnologia": "Webhook", "assincrona": true }
+  ]
+}

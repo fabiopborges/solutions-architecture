@@ -19,7 +19,7 @@ Espelha `skills/roadmap.md`. Cada atividade só virou agente depois que a skill 
 14. **Entrega e Handoff** (prepara em paralelo, só libera após a aprovação humana) - `agents/entrega-e-handoff/AGENT.md`
 15. **Especialista em Dados e Analytics** (sob demanda, só quando há decisão de plataforma analítica, nunca por padrão) - `agents/especialista-dados-analytics/AGENT.md`
 16. **Especialista em IA e Machine Learning** (sob demanda, só quando há decisão de modelo de IA/ML, nunca por padrão) - `agents/especialista-ia-ml/AGENT.md`
-17. **Geração de Diagramas C4** (transversal, acionado por Desenho de Arquitetura e Documentação Final, formaliza diagramas a partir do que já foi decidido, não decide arquitetura — mesmo padrão do Trade-offs e ADR, deriva Container/Contexto de catálogo+sequências desde o MVP 7, nunca traduz desenho.md direto quando há jornada) - `agents/geracao-diagramas/AGENT.md`
+17. **Geração de Diagramas C4** (transversal, acionado por Desenho de Arquitetura e Documentação Final, formaliza diagramas a partir do que já foi decidido, não decide arquitetura — mesmo padrão do Trade-offs e ADR, deriva Container/Contexto de catálogo+sequências desde o MVP 7, nunca traduz desenho.md direto quando há jornada; desde 2026-11-11 gera via Structurizr, só para demandas novas, ArchiFy legado) - `agents/geracao-diagramas/AGENT.md`
 18. **Jornadas do Usuário** (roda em paralelo com Modelagem de Dados, Infraestrutura, Testes e Pesquisa, a partir do Desenho — traduz RFs + componentes já decididos em jornadas observáveis, e emite o spec de sequência máquina-legível que alimenta a derivação do Container) - `agents/jornadas-do-usuario/AGENT.md`
 19. **Orquestrador** (papel de gerente do loop, não de atividade) - `agents/orquestrador/AGENT.md`
 
