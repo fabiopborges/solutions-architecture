@@ -78,6 +78,25 @@ Fixas no gerador, nos temas claro e escuro. Cor nunca é o único sinal: a legen
 
 `alterado` não tinha cor no piloto Structurizr; a cor vem da v1. Texto escuro `#111` porque branco sobre `#e76f51` tem contraste baixo (~3:1). Conferir no tema escuro na fase 2.
 
+## Contexto (`nivel: contexto`)
+
+Regras do C4 oficial (c4model.com/diagrams/system-context): escopo = um sistema; elemento primário = o sistema; apoio = **pessoas e sistemas externos diretamente conectados** a ele; **sem tecnologia nem protocolo** ("em vez de tecnologias"); público = qualquer pessoa, técnica ou não.
+
+O Contexto sai do **mesmo spec** do Container (`--nivel contexto` no gerador), sem modelagem própria. Mudança em relação à v1, que colapsava por fronteira: na v2 o sistema inteiro vira **uma caixa**.
+
+| Regra | Efeito |
+|---|---|
+| Componente | Vira o sistema (uma caixa). Nome e descrição vêm de `sistema`. |
+| Conexão componente → componente | Some (é detalhe interno; aparece no Container). |
+| Ator sem ligação direta ao sistema | **Omitido**, com aviso `[ATOR-FORA-DO-CONTEXTO]`. Se o ator deveria aparecer, falta uma conexão dele com o sistema no spec (decisão de Desenho). |
+| Várias conexões do mesmo par | Uma seta. Com 1 conexão, mantém o `rotulo`; com N > 1, "N interações". |
+| `assincrona` / `condicao` na seta fundida | Só se **todas** as conexões do par forem assíncronas / condicionais. |
+| `tecnologia` das conexões | Não aparece. |
+| Status do sistema | O status comum dos componentes; se forem diferentes, `alterado`. |
+| Sem nenhum ator ligado ao sistema | Erro (`[contexto]`): não há diagrama de contexto a desenhar. |
+| Avisos de Container (`[SEM-TECNOLOGIA]`, `[SEM-DONO]`, `[BROKER-COMO-CONTAINER]`, `[BANCO-COMPARTILHADO]`) | Não se aplicam; ficam fora do relatório. |
+| Dynamic diagram, `leitura[]` e `nota` | Não são gerados nem exibidos (citam containers e passos numerados que não existem neste nível). |
+
 ## Formas
 
 | Elemento | Forma Structurizr |
@@ -117,4 +136,4 @@ O C4 não prescreve formas. Estas são a convenção deste projeto e devem apare
 
 ## Avisos do gerador (relatório sempre exibido, mesmo vazio)
 
-`[ORFAO]`, `[FALTA-CATALOGO]` (herdados da v1) · `[SEM-TECNOLOGIA]` · `[BROKER-COMO-CONTAINER]` · `[SEM-DONO]` · `[BANCO-COMPARTILHADO]` · `[STATUS-SEM-COR]`.
+`[ORFAO]`, `[FALTA-CATALOGO]` (herdados da v1) · `[SEM-TECNOLOGIA]` · `[BROKER-COMO-CONTAINER]` · `[SEM-DONO]` · `[BANCO-COMPARTILHADO]` (Container) · `[ATOR-FORA-DO-CONTEXTO]` (Contexto) · `[SCHEMA-NAO-VALIDADO]` (sem a biblioteca `jsonschema`).

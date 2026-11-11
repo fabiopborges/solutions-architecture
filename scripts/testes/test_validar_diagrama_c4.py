@@ -94,5 +94,60 @@ class Validador(unittest.TestCase):
         self.assertTrue(falhas(rel, "spec"))
 
 
+@unittest.skipUnless(TEM_FERRAMENTAS, "docker e/ou Chrome ausentes")
+class ValidadorContexto(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.mkdtemp()
+        os.chmod(cls.tmp, 0o755)
+        cls.spec_path = AQUI / "fixtures" / "contexto.v2.json"
+        cls.html = pathlib.Path(cls.tmp) / "ctx.html"
+        r = subprocess.run([sys.executable, str(RAIZ / "gerar_pagina_c4.py"), str(cls.spec_path), "--saida", str(cls.html), "--sem-validar"],
+                           capture_output=True, text=True, timeout=400)
+        assert r.returncode == 0, r.stdout + r.stderr
+        cls.pagina = cls.html.read_text(encoding="utf-8")
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def test_pagina_de_contexto_passa_em_tudo(self):
+        rel = v.validar_tudo(self.spec_path, self.html, pasta=pathlib.Path(self.tmp) / "ctx.d")
+        self.assertEqual(falhas(rel), [])
+
+    def test_svgs_sao_de_contexto_sem_dynamic(self):
+        ids = set(re.findall(r'<template id="svg-([^"]+)"', self.pagina))
+        self.assertEqual(ids, {"contexto-light", "contexto-dark", "contexto-h-light", "contexto-h-dark"})
+
+    def test_legenda_sem_fronteira_nem_colchetes(self):
+        self.assertNotIn("Fronteira do sistema em escopo", self.pagina)
+        self.assertNotIn("Entre colchetes", self.pagina)
+
+    def test_leitura_e_nota_nao_aparecem_no_contexto(self):
+        spec = json.loads(self.spec_path.read_text(encoding="utf-8"))
+        spec["leitura"] = [{"titulo": "Passo", "texto": "Texto do passo"}]
+        spec["nota"] = "Nota de teste"
+        arq = pathlib.Path(self.tmp) / "com-leitura.json"
+        arq.write_text(json.dumps(spec), encoding="utf-8")
+        saida = pathlib.Path(self.tmp) / "com-leitura.html"
+        r = subprocess.run([sys.executable, str(RAIZ / "gerar_pagina_c4.py"), str(arq), "--saida", str(saida), "--sem-validar"], capture_output=True, text=True, timeout=400)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        html = saida.read_text(encoding="utf-8")
+        self.assertNotIn("Leitura da jornada", html)
+        self.assertNotIn("Nota de teste", html)
+
+    def test_ator_omitido_nao_aparece_no_diagrama(self):
+        svgs = " ".join(re.findall(r'<template id="svg-[^"]+">(.*?)</template>', self.pagina, re.S))
+        self.assertNotIn("Banco&nbsp;emissor", svgs)
+        self.assertIn("Transportadora", svgs)
+
+    def test_elemento_sumido_reprova(self):
+        pagina = self.pagina.replace("Transportadora", "Transportadxra")
+        arq = pathlib.Path(self.tmp) / "var.html"
+        arq.write_text(pagina, encoding="utf-8")
+        rel = v.validar_tudo(self.spec_path, arq, pasta=None)
+        self.assertTrue(falhas(rel, "html"))
+
+
 if __name__ == "__main__":
     unittest.main()

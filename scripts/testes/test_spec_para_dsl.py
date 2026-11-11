@@ -18,6 +18,7 @@ sys.path.insert(0, str(AQUI.parent))
 import spec_para_dsl as sd  # noqa: E402
 
 FIXTURE = json.loads((AQUI / "fixtures" / "dados-mensageria.v2.json").read_text(encoding="utf-8"))
+CONTEXTO = json.loads((AQUI / "fixtures" / "contexto.v2.json").read_text(encoding="utf-8"))
 
 
 def spec(**mudancas):
@@ -149,6 +150,75 @@ class Fidelidade(unittest.TestCase):
         self.assertEqual(sd.rotulo_exibido({"rotulo": "Pede snapshot"}), "Pede snapshot")              # sem condição, intacto
 
 
+class Contexto(unittest.TestCase):
+    def setUp(self):
+        self.spec = copy.deepcopy(CONTEXTO)
+        self.ctx = sd.colapsar_contexto(self.spec)
+
+    def test_valida_sem_erros_e_avisa_ator_fora(self):
+        erros, av = sd.validar(self.spec)
+        self.assertEqual(erros, [])
+        self.assertTrue(any("[ATOR-FORA-DO-CONTEXTO] 'banco'" in a for a in av))
+        self.assertTrue(any("[ATOR-FORA-DO-CONTEXTO] 'adm'" in a for a in av))
+
+    def test_ator_omitido_nao_gera_aviso_duplicado_de_orfao(self):
+        _, av = sd.validar(self.spec)
+        self.assertFalse(any(a.startswith("[ORFAO] 'adm'") for a in av))
+
+    def test_sem_avisos_de_container(self):
+        _, av = sd.validar(self.spec)
+        self.assertFalse(any(a.startswith(("[SEM-TECNOLOGIA]", "[SEM-DONO]")) for a in av))
+
+    def test_so_atores_diretamente_ligados(self):
+        self.assertEqual({a["id"] for a in self.ctx["atores"]}, {"cli", "pgto", "transp"})
+        self.assertEqual(set(self.ctx["omitidos"]), {"adm", "banco"})
+
+    def test_conexao_interna_some_e_pares_se_fundem(self):
+        conx = {(c["de"], c["para"]): c for c in self.ctx["spec"]["conexoes"]}
+        self.assertNotIn((sd.SIS_CTX, sd.SIS_CTX), conx)
+        self.assertEqual(conx[("cli", sd.SIS_CTX)]["rotulo"], "2 interações")           # web + api
+        self.assertEqual(conx[(sd.SIS_CTX, "pgto")]["rotulo"], "Cobra pedido")           # única: mantém
+        self.assertEqual(conx[("transp", sd.SIS_CTX)]["rotulo"], "2 interações")
+        self.assertEqual(len(conx), 4)   # cli->sis, sis->pgto, sis->transp, transp->sis (pgto->banco some: banco omitido)
+
+    def test_assincrona_e_condicional_so_se_todas_forem(self):
+        conx = {(c["de"], c["para"]): c for c in self.ctx["spec"]["conexoes"]}
+        self.assertTrue(conx[("transp", sd.SIS_CTX)]["assincrona"])
+        self.assertFalse(conx[("cli", sd.SIS_CTX)]["assincrona"])
+        self.assertEqual(conx[(sd.SIS_CTX, "pgto")]["condicao"], "Q7")
+        self.assertNotIn("condicao", conx[("cli", sd.SIS_CTX)])
+
+    def test_status_do_sistema_misto_e_alterado(self):
+        self.assertEqual(self.ctx["spec"]["componentes"][0]["status"], "alterado")
+        s = copy.deepcopy(self.spec)
+        for c in s["componentes"]:
+            c["status"] = "novo"
+        self.assertEqual(sd.colapsar_contexto(s)["spec"]["componentes"][0]["status"], "novo")
+
+    def test_dsl_sem_containers_sem_tecnologia_e_com_view_de_contexto(self):
+        dsl = sd.gerar_dsl(self.spec)
+        self.assertNotIn("container ", dsl.split("views {")[0])
+        self.assertIn('systemContext sis "contexto-geral"', dsl)
+        self.assertIn('systemContext sis "contexto-h-geral"', dsl)
+        self.assertIn('"Condicional a Q7: cobra pedido" ""', dsl)   # tecnologia vazia
+        self.assertNotIn("HTTPS", dsl)
+        self.assertNotIn("Banco emissor", dsl)                      # ator omitido não vira elemento
+        self.assertNotIn("dynamic sis", dsl)
+
+    def test_sem_ator_ligado_e_erro(self):
+        s = copy.deepcopy(self.spec)
+        s["conexoes"] = [c for c in s["conexoes"] if c["de"] in ("web", "api") and c["para"] in ("web", "api")]
+        erros, _ = sd.validar(s)
+        self.assertTrue(any("[contexto]" in e for e in erros))
+
+    def test_titulo_e_chave_da_visao(self):
+        t = sd.titulos_views(self.spec, sd.modelo_efetivo(self.spec))
+        self.assertEqual(list(t), ["contexto"])
+        self.assertTrue(t["contexto"]["title"].startswith("System Context diagram for Loja Exemplo"))
+        self.assertEqual(sd.base_view(self.spec), "contexto")
+        self.assertEqual(sd.base_view(FIXTURE), "container")
+
+
 class Mensageria(unittest.TestCase):
     def test_modo_implicito_colapsa_fila_ponto_a_ponto(self):
         dsl = sd.gerar_dsl(spec(mensageria_modo="implicita"))
@@ -169,6 +239,16 @@ class Mensageria(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("docker"), "docker ausente")
 class IntegracaoStructurizr(unittest.TestCase):
+    def test_dsl_de_contexto_passa_no_validate(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.chmod(d, 0o755)
+            arq = pathlib.Path(d, "workspace.dsl")
+            arq.write_text(sd.gerar_dsl(CONTEXTO), encoding="utf-8")
+            os.chmod(arq, 0o644)
+            r = subprocess.run(["docker", "run", "--rm", "-v", f"{d}:/w", "-w", "/w", "structurizr/structurizr", "validate", "-workspace", "workspace.dsl"],
+                               capture_output=True, text=True, timeout=180)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
     def test_dsl_gerado_passa_no_validate(self):
         with tempfile.TemporaryDirectory() as d:
             os.chmod(d, 0o755)   # o contêiner roda como usuário não-root e precisa ler a pasta

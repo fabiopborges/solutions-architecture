@@ -7,7 +7,7 @@ e embutido no template skills/geracao-diagramas/templates/pagina.template.html.
 
 Requisitos: python3, docker (imagem structurizr/structurizr), google-chrome (ou chromium).
 Uso:
-    python3 scripts/gerar_pagina_c4.py spec.json --saida c4-container-<x>.html [--pasta trabalho/]
+    python3 scripts/gerar_pagina_c4.py spec.json --saida c4-container-<x>.html [--pasta trabalho/] [--nivel contexto]
 A pasta de trabalho (padrão: <saida>.d/) guarda workspace.dsl e o site intermediário (descartável).
 """
 import argparse
@@ -74,27 +74,42 @@ def legenda(m):
     if m["formas"]:
         out += "      <div>\n        <h3>Formas</h3>\n        <ul>\n" + "".join(
             f'<li><i class="sw {formas[f][0]}"></i><span>{formas[f][1]}</span></li>\n' for f in m["formas"]) + "        </ul>\n      </div>\n"
-    lim = ""
-    if m["tem_grupo"]:
-        lim += '<li><i class="sw bc"></i><span>Grupo tracejado = fronteira (bounded context ou serviço)</span></li>\n'
-    lim += '<li><i class="sw fr"></i><span>Fronteira do sistema em escopo</span></li>\n'
-    out += f"      <div>\n        <h3>Limites</h3>\n        <ul>\n{lim}        </ul>\n      </div>\n"
+    ctx = m["nivel"] == "contexto"   # no Contexto o sistema é uma caixa: não há fronteira nem grupos
+    if not ctx:
+        lim = ""
+        if m["tem_grupo"]:
+            lim += '<li><i class="sw bc"></i><span>Grupo tracejado = fronteira (bounded context ou serviço)</span></li>\n'
+        lim += '<li><i class="sw fr"></i><span>Fronteira do sistema em escopo</span></li>\n'
+        out += f"      <div>\n        <h3>Limites</h3>\n        <ul>\n{lim}        </ul>\n      </div>\n"
     setas = '<li><i class="ln"></i><span>Síncrono</span></li>\n<li><i class="ln as"></i><span>Assíncrono (inclui publica e consome mensagem)</span></li>\n'
     if any(c["cond"] for c in m["conexoes"]):
         setas += '<li><i class="ln cond"></i><span>Marrom + “Condicional” no texto: depende de hipótese em aberto</span></li>\n'
-    setas += "<li><span>Entre colchetes: tecnologia ou protocolo.</span></li>\n"
+    if not ctx:
+        setas += "<li><span>Entre colchetes: tecnologia ou protocolo.</span></li>\n"
     out += f"      <div>\n        <h3>Setas (unidirecionais)</h3>\n        <ul>\n{setas}        </ul>\n      </div>"
     return out
 
 
 def aderencia(m):
     comps, conx = m["componentes"], m["conexoes"]
+    if m["nivel"] == "contexto":
+        omitidos = [a for a in m["avisos"] if a.startswith("[ATOR-FORA-DO-CONTEXTO]")]
+        usados = sorted({a["status"] for a in m["atores"]} | {c["status"] for c in comps})
+        return "\n".join([
+            f"<li><b>Título com tipo e escopo:</b> sim — “{html.escape(m['titles']['contexto']['title'])}”.</li>",
+            "<li><b>Escopo = um sistema, desenhado como uma caixa:</b> sim; sem containers nem componentes.</li>",
+            f"<li><b>Apoio = pessoas e sistemas diretamente ligados ao sistema:</b> {len(m['atores'])} no diagrama"
+            + (f"; {len(omitidos)} omitido(s) por não se ligarem diretamente (ver avisos)" if omitidos else "") + ".</li>",
+            "<li><b>Sem tecnologia nem protocolo nas setas:</b> sim (regra do C4 para este nível).</li>",
+            f"<li><b>Status por cor:</b> usados: {html.escape(', '.join(usados))}.</li>",
+            "<li><b>Cor não é o único sinal:</b> status e “Condicional” aparecem em texto; assíncrono é tracejado.</li>",
+            "<li><b>Siglas explicadas:</b> " + (f"{len(m['glossario'])} no glossário desta página." if m["glossario"] else "o spec não traz glossário (campo glossario[]).") + "</li>"])
     com_tec = sum(1 for c in comps if c["tec"])
     con_tec = sum(1 for c in conx if c["tec"])
     usados = sorted({c["status"] for c in comps} | {a["status"] for a in m["atores"] if a["status"] != "Pessoa"})
     sem_tec = [a for a in m["avisos"] if a.startswith("[SEM-TECNOLOGIA]")]
     itens = [
-        f"<li><b>Título com tipo e escopo:</b> sim — “{html.escape(m['titles']['container']['title'])}”.</li>",
+        f"<li><b>Título com tipo e escopo:</b> sim — “{html.escape(m['titles'][m['base']]['title'])}”.</li>",
         f"<li><b>Tecnologia nos containers:</b> {com_tec} de {len(comps)}.</li>",
         f"<li><b>Tecnologia/protocolo nas setas:</b> {con_tec} de {len(conx)}. Setas unidirecionais: sim (uma por conexão).</li>",
         f"<li><b>Status por cor:</b> usados nesta visão: {html.escape(', '.join(usados)) or 'nenhum'}. Os demais têm cor reservada.</li>",
@@ -114,7 +129,8 @@ def com_codigo(texto):
 
 
 def leitura(m):
-    if not m["leitura"] and not m["nota"]:
+    # a leitura e a nota citam containers e passos numerados do Dynamic; não valem para o System Context
+    if m["nivel"] == "contexto" or (not m["leitura"] and not m["nota"]):
         return ""
     s = '  <section>\n    <h2>Leitura da jornada</h2>\n    <p class="sub">Texto autoral vindo da jornada; o gerador só exibe.</p>\n'
     if m["leitura"]:
@@ -144,6 +160,7 @@ def main():
     ap.add_argument("spec")
     ap.add_argument("--saida", required=True)
     ap.add_argument("--pasta")
+    ap.add_argument("--nivel", choices=["container", "contexto"], help="gera este nível a partir do mesmo spec (padrão: o nivel do spec)")
     ap.add_argument("--sem-validar", action="store_true", help="não roda validar_diagrama_c4 ao final")
     a = ap.parse_args()
 
@@ -151,6 +168,8 @@ def main():
     saida = pathlib.Path(a.saida).resolve()
     pasta = pathlib.Path(a.pasta).resolve() if a.pasta else saida.with_suffix(".d")
     spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    if a.nivel:
+        spec["nivel"] = a.nivel
 
     erros, avisos = sd.validar(spec)
     for x in avisos:
@@ -173,7 +192,8 @@ def main():
     run(["docker", "run", "--rm", "--user", f"{os.getuid()}:{os.getgid()}", "-v", f"{pasta}:/w", "-w", "/w",
          "structurizr/structurizr", "export", "-workspace", "workspace.dsl", "-format", "static", "-output", "site"])
 
-    tipos = ["container", "container-h"] + (["dynamic", "dynamic-h"] if "dynamic" in m["titles"] else [])
+    base = m["base"]
+    tipos = [base, base + "-h"] + (["dynamic", "dynamic-h"] if "dynamic" in m["titles"] else [])
     variantes = {}
     for v in tipos:
         for esquema in (0, 1):   # o tema real é lido de data-bs-theme (o flag só induz o viewer)
@@ -188,12 +208,16 @@ def main():
 
     titulo = f"{m['sistema']}" + (f" · {m['journey']}" if m["journey"] else "")
     valores = {
-        "TITULO_PAGINA": html.escape(f"{titulo} · C4 Container"),
+        "TITULO_PAGINA": html.escape(f"{titulo} · C4 {'Contexto' if m['nivel'] == 'contexto' else 'Container'}"),
+        "BASE": base,
+        "ROTULO_ABA": html.escape(m["rotulo_aba"]),
         "H1": html.escape(m["titulo_pagina"] or m["journey"] or m["sistema"]),
-        "CRUMB": html.escape(f"{m['sistema']} · C4 nível Container"),
+        "CRUMB": html.escape(f"{m['sistema']} · C4 nível {'Contexto' if m['nivel'] == 'contexto' else 'Container'}"),
         "LEGENDA": legenda(m),
         "CONTEXTO": html.escape(spec.get("subtitulo", "")) + (" " if spec.get("subtitulo") else "") +
-                    "O <b>Container diagram</b> mostra a estrutura (sem ordem)" + ("; o <b>Dynamic diagram</b> mostra a mesma jornada numerada." if "dynamic" in m["titles"] else "."),
+                    (("O <b>System Context diagram</b> mostra o sistema como uma caixa, com as pessoas e os sistemas diretamente ligados a ele; os detalhes técnicos ficam no Container diagram.")
+                     if m["nivel"] == "contexto" else
+                     ("O <b>Container diagram</b> mostra a estrutura (sem ordem)" + ("; o <b>Dynamic diagram</b> mostra a mesma jornada numerada." if "dynamic" in m["titles"] else "."))),
         "LEITURA": leitura(m),
         "GLOSSARIO": glossario(m),
         "AVISOS": avisos_html(avisos),
@@ -201,7 +225,7 @@ def main():
         "DSL": html.escape(dsl, quote=False),
         "ORIGEM": html.escape(spec_path.name),
         "SLUG": sl,
-        "SPEC_JSON": json_script({k: m[k] for k in ("atores", "componentes", "conexoes")}),
+        "SPEC_JSON": json_script({k: m[k] for k in ("atores", "componentes", "conexoes", "textos")}),
         "TITLES": json_script(m["titles"]),
         "SVGS": "\n".join(f'<template id="svg-{v}-{t}">{variantes[(v, t)]}</template>' for v in tipos for t in ("light", "dark")),
     }
@@ -211,7 +235,7 @@ def main():
     print("ok:", saida, f"({len(out) // 1024} KB)")
     if not a.sem_validar:
         import validar_diagrama_c4 as vd
-        rel = vd.validar_tudo(spec_path, saida, pasta)
+        rel = vd.validar_tudo(spec_path, saida, pasta, nivel=a.nivel)
         rel.imprime()
         if rel.falhou:
             sys.exit(1)

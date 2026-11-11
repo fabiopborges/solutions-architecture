@@ -103,7 +103,9 @@ def padrao_texto(texto):
 def checa_html(rel, spec, pagina_html):
     templ = {m.group(1): m.group(2) for m in re.finditer(r'<template id="svg-([^"]+)">(.*?)</template>', pagina_html, re.S)}
     tem_din = bool(spec.get("journey_id"))
-    esperados = [f"{v}-{t}" for v in (["container", "container-h"] + (["dynamic", "dynamic-h"] if tem_din else [])) for t in ("light", "dark")]
+    base = sd.base_view(spec)
+    tem_din = tem_din and base == "container"
+    esperados = [f"{v}-{t}" for v in ([base, base + "-h"] + (["dynamic", "dynamic-h"] if tem_din else [])) for t in ("light", "dark")]
     faltam = [e for e in esperados if e not in templ]
     rel.add("FAIL" if faltam else "PASS", "html", f"{len(esperados)} SVGs esperados (visões x layouts x temas)" + (f"; faltam: {faltam}" if faltam else ": todos presentes"))
     if faltam:
@@ -131,7 +133,7 @@ def checa_html(rel, spec, pagina_html):
 
 
 # ----------------------------------------------------------------------------- 5. runtime
-ESTADO_INICIAL = 'let view = "container", layout = "v", theme = "light"'
+ESTADO_INICIAL_RE = re.compile(r'let view = "(\w+)", layout = "v", theme = "light"')
 
 
 def chrome():
@@ -146,11 +148,13 @@ def checa_runtime(rel, spec, pagina_html):
     if not cr:
         rel.add("WARN", "runtime", "Chrome/Chromium ausente; teste de abertura pulado")
         return
-    if ESTADO_INICIAL not in pagina_html:
+    achou = ESTADO_INICIAL_RE.search(pagina_html)
+    if not achou:
         rel.add("FAIL", "runtime", "contrato do template quebrado: linha de estado inicial não encontrada")
         return
+    ESTADO_INICIAL = achou.group(0)
     n_comp = len(sd.modelo_efetivo(spec).get("componentes", []))
-    views = ["container"] + (["dynamic"] if spec.get("journey_id") else [])
+    views = [achou.group(1)] + (["dynamic"] if spec.get("journey_id") and sd.base_view(spec) == "container" else [])
     with tempfile.TemporaryDirectory() as d:
         os.chmod(d, 0o755)
         for v in views:
@@ -178,9 +182,11 @@ def checa_runtime(rel, spec, pagina_html):
                     rel.add("FAIL" if problemas else "PASS", "runtime", f"{rotulo}: " + ("; ".join(problemas) if problemas else "abre, monta o SVG e preenche as tabelas, sem erro de JS"))
 
 
-def validar_tudo(spec_path, html_path, pasta=None):
+def validar_tudo(spec_path, html_path, pasta=None, nivel=None):
     rel = Relatorio()
     spec = json.loads(pathlib.Path(spec_path).read_text(encoding="utf-8"))
+    if nivel:
+        spec["nivel"] = nivel   # mesmo override do gerador (--nivel)
     erros, avisos = sd.validar(spec)
     for e in erros:
         rel.add("FAIL", "spec", e)
@@ -203,10 +209,11 @@ def main():
     ap.add_argument("spec")
     ap.add_argument("html")
     ap.add_argument("--pasta", help="pasta com workspace.dsl (padrão: <html>.d)")
+    ap.add_argument("--nivel", choices=["container", "contexto"])
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
     pasta = a.pasta or str(pathlib.Path(a.html).with_suffix(".d"))
-    rel = validar_tudo(a.spec, a.html, pasta if pathlib.Path(pasta).exists() else None)
+    rel = validar_tudo(a.spec, a.html, pasta if pathlib.Path(pasta).exists() else None, nivel=a.nivel)
     if a.json:
         print(json.dumps(rel.itens, ensure_ascii=False, indent=1))
     else:

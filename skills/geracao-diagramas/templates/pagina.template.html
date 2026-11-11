@@ -112,7 +112,7 @@
 
 <div class="stage" id="stage">
   <div class="toolbar" role="toolbar" aria-label="Controles do diagrama">
-      <button id="tab-c" aria-pressed="true">Container diagram</button>
+      <button id="tab-c" aria-pressed="true">{{ROTULO_ABA}}</button>
       <button id="tab-d" aria-pressed="false">Dynamic diagram</button>
       <span class="grp" role="group" aria-label="Layout"><button id="lay-v" aria-pressed="true" title="Layout vertical (padrão)">Vertical</button><button id="lay-h" aria-pressed="false" title="Layout horizontal, esquerda para direita">Horizontal</button></span>
       <span class="sep"></span>
@@ -195,8 +195,8 @@ const TITLES = {{TITLES}};
 /* ---------- dados das tabelas (gerados do spec) ---------- */
 const spec = {{SPEC_JSON}};
 const esc = s => String(s ?? "").replace(/[&<>"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]));
-$("#sub-comp").textContent = `${spec.componentes.length} containers e ${spec.atores.length} atores (pessoas e sistemas externos).`;
-$("#sub-con").textContent = `${spec.conexoes.length} interações, na ordem do spec. A numeração corresponde aos passos do Dynamic diagram.`;
+$("#sub-comp").textContent = spec.textos.comp;
+$("#sub-con").textContent = spec.textos.con;
 $("#tbl-comp tbody").innerHTML =
   spec.componentes.map(c => `<tr><td><b>${esc(c.nome)}</b></td><td>${esc(c.status)}</td><td>${esc(c.tec)}</td><td>${esc(c.grupo)}</td><td>${esc(c.descr)}</td></tr>`).join("") +
   spec.atores.map(a => `<tr><td><b>${esc(a.nome)}</b></td><td>${esc(a.status)}</td><td>${esc(a.tec)}</td><td>—</td><td>${esc(a.papel)}</td></tr>`).join("");
@@ -206,7 +206,7 @@ $("#tbl-con tbody").innerHTML = spec.conexoes.map((c,i) =>
 
 /* ---------- estado ---------- */
 const NS = "http://www.w3.org/2000/svg";
-let view = "container", layout = "v", theme = "light", svg = null, base = null, vb = null, fitScale = 1;
+let view = "{{BASE}}", layout = "v", theme = "light", svg = null, base = null, vb = null, fitScale = 1;
 try { const t = localStorage.getItem("c4-theme"); if (t === "dark") theme = "dark"; } catch(e){}
 
 function applyTheme(){
@@ -281,11 +281,11 @@ host.addEventListener("keydown", ev => {
 $("#z-in").onclick  = () => { const c = center(); zoomAt(1.25, c.x, c.y); };
 $("#z-out").onclick = () => { const c = center(); zoomAt(1/1.25, c.x, c.y); };
 $("#z-fit").onclick = fit; $("#z-100").onclick = actual;
-function setView(v){ view = v; vb = null; $("#tab-c").setAttribute("aria-pressed", v==="container"); $("#tab-d").setAttribute("aria-pressed", v==="dynamic"); mount(false); }
+function setView(v){ view = v; vb = null; $("#tab-c").setAttribute("aria-pressed", v==="{{BASE}}"); $("#tab-d").setAttribute("aria-pressed", v==="dynamic"); mount(false); }
 function setLayout(l){ layout = l; vb = null; $("#lay-v").setAttribute("aria-pressed", l==="v"); $("#lay-h").setAttribute("aria-pressed", l==="h"); try{ localStorage.setItem("c4-layout", l); }catch(e){} mount(false); }
 $("#lay-v").onclick = () => setLayout("v"); $("#lay-h").onclick = () => setLayout("h");
 try { if (localStorage.getItem("c4-layout") === "h") { layout = "h"; $("#lay-v").setAttribute("aria-pressed","false"); $("#lay-h").setAttribute("aria-pressed","true"); } } catch(e){}
-$("#tab-c").onclick = () => setView("container"); $("#tab-d").onclick = () => setView("dynamic");
+$("#tab-c").onclick = () => setView("{{BASE}}"); $("#tab-d").onclick = () => setView("dynamic");
 $("#t-theme").onclick = () => { theme = theme === "dark" ? "light" : "dark"; try{ localStorage.setItem("c4-theme", theme); }catch(e){} applyTheme(); mount(true); };
 $("#t-save").onclick = () => {
   const c = svg.cloneNode(true); c.setAttribute("xmlns", NS); c.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");

@@ -10,8 +10,9 @@ Uso:
 Saída: workspace.dsl + relatório de avisos (sempre exibido, mesmo vazio).
 Código de saída 1 se houver erro (referência inválida, limite de palavras, nível não suportado).
 
-Suporte atual (Fase 1): nivel "container". Com journey_id, gera também o Dynamic diagram
-(numerado, na ordem de conexoes[]). Os demais níveis entram na Fase 4.
+Suporte atual: nivel "container" (com journey_id, gera também o Dynamic diagram numerado, na ordem de
+conexoes[]) e nivel "contexto" (System Context: o sistema vira uma caixa; ver colapsar_contexto).
+Os demais níveis entram na Fase 4.
 """
 import argparse
 import copy
@@ -22,7 +23,8 @@ import sys
 import unicodedata
 
 LIMITE_PALAVRAS = 12
-NIVEIS_SUPORTADOS = ("container",)
+NIVEIS_SUPORTADOS = ("container", "contexto")
+SIS_CTX = "ctx_sistema_raiz"   # id interno da caixa única do System Context
 STATUS_TAG = {"novo": "Novo", "alterado": "Alterado", "reuso": "Reuso", "existente": "Existente"}
 FORMA_TAG = {"api": "Api", "app-web": "App Web", "app-movel": "App Móvel"}
 ARMAZ_ROTULO = {"relacional": "banco relacional", "documento": "banco de documentos", "cache": "cache",
@@ -144,11 +146,67 @@ def validar(spec):
         if len(acessos) > 1:
             avisos.append(f"[BANCO-COMPARTILHADO] '{c['id']}' é acessado por componentes de {len(acessos)} fronteiras diferentes")
     _ = nome_de
+    if nivel == "contexto":
+        # tecnologia, broker, dono e banco são assuntos do Container; no Contexto só importam órfãos e atores omitidos
+        avisos = [a for a in avisos if not a.startswith(("[SEM-TECNOLOGIA]", "[BROKER-COMO-CONTAINER]", "[SEM-DONO]", "[BANCO-COMPARTILHADO]"))]
+        if not erros:
+            ctx = colapsar_contexto(spec)
+            avisos = [a for a in avisos if not any(a.startswith(f"[ORFAO] '{i}'") for i in ctx["omitidos"])]   # já coberto pelo aviso abaixo
+            for i in ctx["omitidos"]:
+                avisos.append(f"[ATOR-FORA-DO-CONTEXTO] '{i}' não se liga diretamente ao sistema; omitido do System Context (C4: só pessoas e sistemas diretamente conectados)")
+            if not ctx["atores"]:
+                erros.append("[contexto] nenhum ator ou sistema externo ligado diretamente ao sistema")
     return erros, avisos
 
 
 # ----------------------------------------------------------------------------- modelo efetivo
+def base_view(spec):
+    """Prefixo da visão estrutural: 'contexto' ou 'container' (chave das views e dos SVGs na página)."""
+    return "contexto" if spec.get("nivel") == "contexto" else "container"
+
+
+def colapsar_contexto(spec):
+    """System Context (c4model.com/diagrams/system-context): o sistema em escopo vira UMA caixa; aparecem só
+    pessoas e sistemas diretamente ligados a ele; sem tecnologia nem protocolo nas setas.
+    Regras: conexão interna (componente -> componente) some; componente vira o sistema; ator sem ligação direta
+    ao sistema é omitido (e avisado); várias conexões do mesmo par viram uma seta ("N interações" se N > 1),
+    assíncrona só se todas forem, condicional só se todas forem."""
+    comps = spec.get("componentes", []) or []
+    ids_comp = {c["id"] for c in comps}
+    mapa = lambda i: SIS_CTX if i in ids_comp else i
+    pares = {}
+    for c in spec.get("conexoes", []) or []:
+        de, para = mapa(c["de"]), mapa(c["para"])
+        if de == SIS_CTX and para == SIS_CTX:
+            continue
+        pares.setdefault((de, para), []).append(c)
+    diretos = {de if para == SIS_CTX else para for (de, para) in pares if SIS_CTX in (de, para)}
+    atores = [a for a in spec.get("atores", []) or [] if a["id"] in diretos]
+    omitidos = [a["id"] for a in spec.get("atores", []) or [] if a["id"] not in diretos]
+    conx = []
+    for (de, para), lst in pares.items():
+        if (de != SIS_CTX and de not in diretos) or (para != SIS_CTX and para not in diretos):
+            continue
+        assinc = all(x.get("assincrona") or x.get("acesso") in ACESSOS_ASSINCRONOS for x in lst)
+        cond = ", ".join(sorted({x["condicao"] for x in lst})) if all(x.get("condicao") for x in lst) else ""
+        novo = {"de": de, "para": para, "rotulo": lst[0]["rotulo"] if len(lst) == 1 else f"{len(lst)} interações", "assincrona": assinc}
+        if cond:
+            novo["condicao"] = cond
+        conx.append(novo)
+    status = {c["status"] for c in comps}
+    sis = spec.get("sistema") or {}
+    pseudo = {"id": SIS_CTX, "nome": nome_sistema(spec), "status": status.pop() if len(status) == 1 else ("alterado" if status else "novo"),
+              "descricao": sis.get("descricao", "")}
+    s = dict(spec)
+    s.update({"atores": atores, "componentes": [pseudo], "fronteiras": [], "conexoes": conx})
+    return {"atores": atores, "omitidos": omitidos, "spec": s}
+
+
 def modelo_efetivo(spec):
+    return colapsar_contexto(spec)["spec"] if spec.get("nivel") == "contexto" else _efetivo_container(spec)
+
+
+def _efetivo_container(spec):
     """Aplica mensageria_modo (implícita) e seta_mensageria (fluxo) sobre uma cópia do spec."""
     s = copy.deepcopy(spec)
     comps = {c["id"]: c for c in s.get("componentes", [])}
@@ -295,13 +353,49 @@ def titulos_views(spec, ef):
     if conds:
         legenda += f" 'Condicional' no texto = depende de hipótese em aberto ({', '.join(conds)})."
     base = (spec.get("subtitulo", "").rstrip(".") + ". ") if spec.get("subtitulo") else ""
+    if spec.get("nivel") == "contexto":
+        return {"contexto": {"title": f"System Context diagram for {sis}{escopo}", "desc": base + legenda}}
     t = {"container": {"title": f"Container diagram for {sis}{escopo}", "desc": base + legenda}}
     if jid:
         t["dynamic"] = {"title": f"Dynamic diagram for {sis}{escopo}", "desc": "Ordem das interações, numeradas. " + legenda}
     return t
 
 
+def _linhas_atores(L, atores):
+    for a in atores:
+        tag = STATUS_TAG.get(a.get("status", ""), "")
+        if a["tipo"] == "sistema_externo":
+            L.append(f'        {ident(a["id"])} = softwareSystem {q(a["nome"])} {q(a.get("papel", ""))} {q(tag or "Existente")}')
+        else:
+            L.append(f'        {ident(a["id"])} = person {q(a["nome"])} {q(a.get("papel", ""))}' + (f" {q(tag)}" if tag else ""))
+
+
+def _gerar_dsl_contexto(spec, horizontal):
+    ef = modelo_efetivo(spec)
+    atores, pseudo, conx = ef["atores"], ef["componentes"][0], ef["conexoes"]
+    jid = spec.get("journey_id")
+    sl = slug(jid) if jid else "geral"
+    ref = lambda i: "sis" if i == SIS_CTX else ident(i)
+    L = [f"workspace {q(spec['titulo'])} {q(spec.get('subtitulo', ''))} {{", "", "    !identifiers hierarchical", "", "    model {"]
+    _linhas_atores(L, atores)
+    L += ["", f'        sis = softwareSystem {q(pseudo["nome"])} {q(pseudo.get("descricao", ""))} {q(STATUS_TAG[pseudo["status"]])}', "",
+          "        # Relações do System Context: sem tecnologia nem protocolo (c4model.com/diagrams/system-context)."]
+    for c in conx:
+        o, d, desc, _, tags = _rel(c, ref)
+        L.append(f'        {o} -> {d} {q(desc)} ""' + (f" {q(tags)}" if tags else ""))
+    L += ["    }", "", "    views {"]
+    tit = titulos_views(spec, ef)["contexto"]
+    inc = "\n".join(f"            include {ident(a['id'])}" for a in atores)
+    for suf, lay in [("", "tb 130 100")] + ([("-h", "lr 120 110")] if horizontal else []):
+        L += [f'        systemContext sis "contexto{suf}-{sl}" {{', f'            title {q(tit["title"])}', f'            description {q(tit["desc"])}',
+              "            include *", inc, f"            autolayout {lay}", "        }", ""]
+    L += ["        # Cores = status. Tema escuro repete os estilos de elemento.", "        styles {", _estilos("light").rstrip("\n"), _estilos("dark").rstrip("\n"), "        }", "    }", "}", ""]
+    return "\n".join(L)
+
+
 def gerar_dsl(spec, horizontal=True):
+    if spec.get("nivel") == "contexto":
+        return _gerar_dsl_contexto(spec, horizontal)
     ef = modelo_efetivo(spec)
     atores, comps, fronts, conx = ef.get("atores", []), ef.get("componentes", []), ef.get("fronteiras", []), ef.get("conexoes", [])
     sis = nome_sistema(spec)
@@ -319,12 +413,7 @@ def gerar_dsl(spec, horizontal=True):
     L += ["", "    model {"]
     if any(f.get("pai_id") for f in fronts):  # grupos aninhados exigem a propriedade no model
         L += ["        properties {", '            "structurizr.groupSeparator" "/"', "        }", ""]
-    for a in atores:
-        tag = STATUS_TAG.get(a.get("status", ""), "")
-        if a["tipo"] == "sistema_externo":
-            L.append(f'        {ident(a["id"])} = softwareSystem {q(a["nome"])} {q(a.get("papel", ""))} {q(tag or "Existente")}')
-        else:
-            L.append(f'        {ident(a["id"])} = person {q(a["nome"])} {q(a.get("papel", ""))}' + (f" {q(tag)}" if tag else ""))
+    _linhas_atores(L, atores)
     L += ["", f"        sis = softwareSystem {q(sis)} {q(sis_desc)} {{"]
 
     usados = {c.get("fronteira_id") for c in comps}
@@ -389,7 +478,15 @@ def modelo_pagina(spec, avisos):
     atores, comps, fronts, conx = ef.get("atores", []), ef.get("componentes", []), ef.get("fronteiras", []), ef.get("conexoes", [])
     nome_de = {x["id"]: x.get("nome", x["id"]) for x in atores + comps + fronts}
     jid = spec.get("journey_id")
+    ctx = spec.get("nivel") == "contexto"
     return {
+        "base": base_view(spec),
+        "nivel": spec.get("nivel"),
+        "rotulo_aba": "System Context diagram" if ctx else "Container diagram",
+        "textos": ({"comp": f"O sistema em escopo (1 caixa) e {len(atores)} pessoas e sistemas diretamente ligados a ele.",
+                    "con": f"{len(conx)} setas, uma por par de elementos. Detalhes técnicos ficam no Container diagram."} if ctx else
+                   {"comp": f"{len(comps)} containers e {len(atores)} atores (pessoas e sistemas externos).",
+                    "con": f"{len(conx)} interações, na ordem do spec. A numeração corresponde aos passos do Dynamic diagram."}),
         "sistema": nome_sistema(spec),
         "slug": slug(jid) if jid else "geral",
         "journey": jid or "",
