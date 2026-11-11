@@ -22,7 +22,7 @@ Formato e regras: `docs/diagrams/c4-schema-v2.md` (schema formal em `c4-schema-v
 
 **Pré-requisitos:** `python3`, `docker` (imagem `structurizr/structurizr`, baixada na 1ª execução) e `google-chrome` ou `chromium`. A biblioteca `jsonschema` é opcional: sem ela o schema formal não é validado (aviso `[SCHEMA-NAO-VALIDADO]`) e só as checagens internas rodam.
 
-**Testes** (72, a maioria sem rede; os de página exigem Docker e Chrome e são pulados sem eles):
+**Testes** (73, a maioria sem rede; os de página exigem Docker e Chrome e são pulados sem eles):
 
 ```bash
 cd scripts && python3 -m unittest discover -s testes
