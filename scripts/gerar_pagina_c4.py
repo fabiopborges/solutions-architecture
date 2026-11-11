@@ -63,7 +63,8 @@ def legenda(m):
     li = ""
     for nome, cls, cor in status:
         nomes = [x["nome"] for x in m["componentes"] + m["atores"] if x["status"] == nome]
-        nota = f"nesta visão: {html.escape(', '.join(nomes))}" if nomes else "nenhum nesta visão"
+        # lista os nomes só quando são poucos; senão a legenda vira um parágrafo (o detalhe está nas tabelas)
+        nota = ("nesta visão: " + html.escape(", ".join(nomes)) if len(nomes) <= 3 else f"nesta visão: {len(nomes)} elementos") if nomes else "nenhum nesta visão"
         li += f'<li><i class="sw {cls}"></i><span><b>{nome}</b> — {cor} <small>· {nota}</small></span></li>\n'
     if m["tem_pessoa"]:
         li += '<li><i class="sw pessoa"></i><span><b>Pessoa</b> — azul escuro, forma de pessoa</span></li>\n'
@@ -105,6 +106,23 @@ def aderencia(m):
     if sem_tec:
         itens.append(f"<li><b>Atenção:</b> {len(sem_tec)} item(ns) sem tecnologia (ver avisos); o gerador não inventa.</li>")
     return "\n".join(itens)
+
+
+def com_codigo(texto):
+    """Escapa o HTML e transforma `trecho` em <code>trecho</code>."""
+    return re.sub(r"`([^`]+)`", r"<code>\1</code>", html.escape(texto, quote=False))
+
+
+def leitura(m):
+    if not m["leitura"] and not m["nota"]:
+        return ""
+    s = '  <section>\n    <h2>Leitura da jornada</h2>\n    <p class="sub">Texto autoral vindo da jornada; o gerador só exibe.</p>\n'
+    if m["leitura"]:
+        s += '    <ol class="steps">\n' + "".join(
+            f"      <li><div><b>{html.escape(p['titulo'])}</b>{com_codigo(p['texto'])}</div></li>\n" for p in m["leitura"]) + "    </ol>\n"
+    if m["nota"]:
+        s += f'    <div class="note">{com_codigo(m["nota"])}</div>\n'
+    return s + "  </section>\n"
 
 
 def glossario(m):
@@ -171,11 +189,12 @@ def main():
     titulo = f"{m['sistema']}" + (f" · {m['journey']}" if m["journey"] else "")
     valores = {
         "TITULO_PAGINA": html.escape(f"{titulo} · C4 Container"),
-        "H1": html.escape(m["journey"] or m["sistema"]),
+        "H1": html.escape(m["titulo_pagina"] or m["journey"] or m["sistema"]),
         "CRUMB": html.escape(f"{m['sistema']} · C4 nível Container"),
         "LEGENDA": legenda(m),
         "CONTEXTO": html.escape(spec.get("subtitulo", "")) + (" " if spec.get("subtitulo") else "") +
                     "O <b>Container diagram</b> mostra a estrutura (sem ordem)" + ("; o <b>Dynamic diagram</b> mostra a mesma jornada numerada." if "dynamic" in m["titles"] else "."),
+        "LEITURA": leitura(m),
         "GLOSSARIO": glossario(m),
         "AVISOS": avisos_html(avisos),
         "ADERENCIA": aderencia(m),

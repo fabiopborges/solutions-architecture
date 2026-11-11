@@ -97,7 +97,7 @@ class GeracaoDsl(unittest.TestCase):
 
     def test_assincrono_e_condicional(self):
         dsl = sd.gerar_dsl(spec())
-        self.assertIn('"Condicional a Q7: Cobra pedido"', dsl)
+        self.assertIn('"Condicional a Q7: cobra pedido"', dsl)
         self.assertIn('"Condicional"', dsl)
         relacoes_assincronas = [l for l in dsl.splitlines() if "->" in l and l.rstrip().endswith('"Assíncrono"')]
         self.assertEqual(len(relacoes_assincronas), 2)  # publica + consome
@@ -132,6 +132,21 @@ class GeracaoDsl(unittest.TestCase):
         self.assertIn("Retenção: 5 anos", dsl)
         self.assertIn("Sensibilidade: dado pessoal", dsl)
         self.assertIn("Dono: BC Pedidos", dsl)
+
+
+class Fidelidade(unittest.TestCase):
+    def test_descricao_sem_extras_preserva_ponto_final(self):
+        s = spec()
+        s["componentes"][1]["descricao"] = "Recebe e confirma pedidos."
+        self.assertIn('"Recebe e confirma pedidos."', sd.gerar_dsl(s))
+
+    def test_rotulo_condicional_minuscula_so_palavra_comum(self):
+        f = lambda r: sd.rotulo_exibido({"rotulo": r, "condicao": "Q1"})
+        self.assertEqual(f("Pede snapshot"), "Condicional a Q1: pede snapshot")
+        self.assertEqual(f("EventoDeConta publicado"), "Condicional a Q1: EventoDeConta publicado")   # identificador preservado
+        self.assertEqual(f("API chamada"), "Condicional a Q1: API chamada")                             # sigla preservada
+        self.assertEqual(f("C6 recusa pedido"), "Condicional a Q1: C6 recusa pedido")                   # código com dígito preservado
+        self.assertEqual(sd.rotulo_exibido({"rotulo": "Pede snapshot"}), "Pede snapshot")              # sem condição, intacto
 
 
 class Mensageria(unittest.TestCase):

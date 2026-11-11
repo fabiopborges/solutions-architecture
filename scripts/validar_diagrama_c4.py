@@ -117,10 +117,7 @@ def checa_html(rel, spec, pagina_html):
 
     ef = sd.modelo_efetivo(spec)
     nomes = [x["nome"] for x in ef.get("atores", []) + ef.get("componentes", [])]
-    rotulos = []
-    for c in ef.get("conexoes", []):
-        r = c["rotulo"]
-        rotulos.append(f"Condicional a {c['condicao']}: {r}" if c.get("condicao") else r)
+    rotulos = [sd.rotulo_exibido(c) for c in ef.get("conexoes", [])]
     # o Structurizr exibe a descrição do elemento/seta dentro do SVG; confere elementos e rótulos em cada visão
     for chave in esperados:
         svg = templ[chave]

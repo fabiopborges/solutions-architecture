@@ -204,7 +204,11 @@ def _tags_comp(c):
 
 
 def _descricao(c, nome_de):
-    partes = [c.get("descricao", "").rstrip(".")]
+    extras = [c.get("dono_id"), c.get("retencao"), c.get("sensibilidade")]
+    base = c.get("descricao", "")
+    if not any(extras):
+        return base   # sem campos extras, preserva o texto do spec exatamente (inclusive o ponto final)
+    partes = [base.rstrip(".")]
     if c.get("dono_id"):
         partes.append(f"Dono: {nome_de.get(c['dono_id'], c['dono_id'])}")
     if c.get("retencao"):
@@ -254,10 +258,21 @@ def _estilos(modo):
     return s
 
 
+def rotulo_exibido(c):
+    """Rótulo como aparece no diagrama. Conexão condicional ganha o prefixo "Condicional a <condicao>: ";
+    a 1ª letra do rótulo vira minúscula só se a 1ª palavra for comum (inicial maiúscula e o resto só letras
+    minúsculas). Siglas (API, C6) e identificadores (EventoDeConta) ficam como estão."""
+    r = c["rotulo"]
+    if not c.get("condicao"):
+        return r
+    primeira = r.split()[0] if r.split() else ""
+    if len(primeira) > 1 and primeira[0].isupper() and primeira[1:].isalpha() and primeira[1:].islower():
+        r = r[0].lower() + r[1:]
+    return f"Condicional a {c['condicao']}: {r}"
+
+
 def _rel(c, ref):
-    desc = c["rotulo"]
-    if c.get("condicao"):
-        desc = f"Condicional a {c['condicao']}: {desc}"
+    desc = rotulo_exibido(c)
     tags = []
     if c.get("assincrona") or c.get("acesso") in ACESSOS_ASSINCRONOS:
         tags.append("Assíncrono")
@@ -393,6 +408,9 @@ def modelo_pagina(spec, avisos):
         "tem_pessoa": any(a["tipo"] != "sistema_externo" for a in atores),
         "tem_grupo": any(c.get("fronteira_id") for c in comps),
         "glossario": spec.get("glossario", []),
+        "titulo_pagina": spec.get("titulo_pagina", ""),
+        "leitura": spec.get("leitura", []),
+        "nota": spec.get("nota", ""),
         "avisos": avisos,
     }
 

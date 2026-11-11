@@ -14,6 +14,17 @@
       "properties": { "nome": { "type": "string" }, "descricao": { "type": "string" } },
       "additionalProperties": false
     },
+    "leitura": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["titulo", "texto"],
+        "properties": { "titulo": { "type": "string" }, "texto": { "type": "string" } },
+        "additionalProperties": false
+      }
+    },
+    "nota": { "type": "string" },
+    "titulo_pagina": { "type": "string" },
     "mensageria_modo": { "enum": ["explicita", "implicita"], "default": "explicita" },
     "seta_mensageria": { "enum": ["iniciador", "fluxo"], "default": "iniciador" },
     "glossario": {

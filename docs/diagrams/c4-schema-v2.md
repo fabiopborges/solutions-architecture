@@ -32,12 +32,15 @@ Fontes oficiais usadas nas regras de dados e mensageria (conferidas em 2026-11-1
 | `conexoes[].via` | string, **novo** | `id` da fila/tópico usado. Só tem efeito no modo implícito (ver "Mensageria"). |
 | `conexoes[].condicao` | string, **novo** | Referência à hipótese em aberto (ex.: "Q5/H1"). Seta marcada como condicional. **Fora** do limite de 12 palavras do `rotulo`. |
 | nível superior | `sistema` | `{nome, descricao}`, **novo**. Sistema em escopo. Se ausente, usa o trecho do `titulo` antes de " — ". |
+| nível superior | `leitura[]` | `{titulo, texto}`, **novo**. Passos de leitura da jornada, em texto autoral (vem de `jornadas.md`; o gerador só exibe, na ordem). Backticks viram `<code>`. |
+| nível superior | `titulo_pagina` | string, **novo**. Título legível da página (ex.: nome da jornada). Se ausente, usa `journey_id`, ou o nome do sistema. |
+| nível superior | `nota` | string, **novo**. Aviso destacado (ex.: premissas em aberto). Só exibe. |
 | nível superior | `mensageria_modo` | `explicita` (padrão) \| `implicita`. Ver "Mensageria". |
 | nível superior | `seta_mensageria` | `iniciador` (padrão) \| `fluxo`. Ver "Mensageria". |
 | nível superior | `glossario[]` | `{sigla, significado}`. Gera a tabela de siglas (C4: explicar acrônimos). |
 | `mensagens[].condicao`, `.acesso`, `.via` | iguais às de `conexoes[]` | Nas sequências. |
 
-`rotulo` e `nome` continuam com o limite de 12 palavras (verificado no gerador).
+`rotulo` e `nome` continuam com o limite de 12 palavras (verificado no gerador). Com `condicao`, o diagrama mostra `Condicional a <condicao>: <rotulo>`; a 1ª letra do rótulo vira minúscula só quando a 1ª palavra é comum (inicial maiúscula e o resto só letras minúsculas); siglas (`API`, `C6`) e identificadores (`EventoDeConta`) ficam como estão.
 
 ## Regras vindas do C4 oficial
 

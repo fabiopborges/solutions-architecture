@@ -72,6 +72,7 @@
   .steps li{counter-increment:s;display:grid;grid-template-columns:32px 1fr;gap:10px}
   .steps li::before{content:counter(s);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:600;font-size:13px}
   .steps b{display:block}
+  .note code,.steps code{font-size:.92em}
   .note{background:var(--warn-bg);border:1px solid var(--warn-b);border-radius:8px;padding:12px 14px;margin-top:14px;font-size:14px}
   table{width:100%;border-collapse:collapse;font-size:14px}
   th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
@@ -149,7 +150,7 @@
     <h2>Contexto</h2>
     <p class="sub">{{CONTEXTO}}</p>
   </section>
-
+{{LEITURA}}
   <section>
     <h2>Componentes</h2>
     <p class="sub" id="sub-comp"></p>
