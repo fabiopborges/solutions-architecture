@@ -43,8 +43,11 @@ Fluxo: `catalogo-componentes.json` + `sequencia-<id>_spec.json` → `derivar_c4.
 10. **Sequência:** não há mais `sequencia-<id>.html`. O Dynamic diagram numerado dentro de `c4-container-jornada-<id>.html` a substitui; `sequencia-<id>_spec.json` continua sendo a fonte, de Jornadas do Usuário.
 11. Se a estrutura em `desenho.md`/`dados.md` for insuficiente ou ambígua para virar diagrama, devolva a pergunta a quem produziu o documento em vez de inventar.
 
+## Componente (C3)
+Só quando `desenho.md` já detalha os componentes internos de um container (nunca por palpite; sem detalhe, a pergunta volta ao Desenho). Autore `c4-componente-<container>.json`: `nivel: "componente"`, `foco_id` (id do container), componentes internos com `container_id = foco_id`, mais os vizinhos (containers, atores) e as `conexoes[]` que tocam os internos. Relação entre o container e seu próprio interno é proibida pelo C4. O que não se liga a nenhum interno é omitido com `[FORA-DA-VISAO]`. O orquestrador gera `c4-componente-<container>.html`.
+
 ## Lacunas conhecidas
-Componente (C3), Landscape e Deployment ainda não são gerados. Sinalize a quem pediu; não improvise outro formato. Os `cards[]` e `meta.views` do ArchiFy não existem aqui: a rastreabilidade das suposições vem de `suposicoes[]` e a narrativa da jornada vem de `leitura[]`/`nota`.
+Landscape e Deployment ainda não são gerados. Sinalize a quem pediu; não improvise outro formato. Os `cards[]` e `meta.views` do ArchiFy não existem aqui: a rastreabilidade das suposições vem de `suposicoes[]` e a narrativa da jornada vem de `leitura[]`/`nota`.
 
 ## Artefato de saída
 Em `demandas/<nome-da-demanda>/diagramas/`: `catalogo-componentes.json` (fonte estática); `c4-container.json` + `c4-container-jornada-<id>.json` (specs v2 derivados); `c4-container.html`, `c4-container-jornada-<id>.html`, `c4-contexto.html` e, se houver, `c4-fluxo-dados.html` (HTML autocontido: SVG vetorial, tema claro/escuro, zoom, tela cheia, legenda, tabelas, avisos, suposições); `_trabalho/<nome>/workspace.dsl` (fonte Structurizr de cada diagrama); `RELATORIO-GERACAO.md`. O relatório vai também na resposta a quem acionou, nunca descartado.

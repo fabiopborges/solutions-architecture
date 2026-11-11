@@ -104,6 +104,13 @@ def aderencia(m):
             f"<li><b>Status por cor:</b> usados: {html.escape(', '.join(usados))}.</li>",
             "<li><b>Cor não é o único sinal:</b> status e “Condicional” aparecem em texto; assíncrono é tracejado.</li>",
             "<li><b>Siglas explicadas:</b> " + (f"{len(m['glossario'])} no glossário desta página." if m["glossario"] else "o spec não traz glossário (campo glossario[]).") + "</li>"])
+    if m["nivel"] == "componente":
+        return "\n".join([
+            f"<li><b>Título com tipo e escopo:</b> sim — “{html.escape(m['titles']['componente']['title'])}”.</li>",
+            f"<li><b>Escopo = um container, aberto em componentes:</b> {len(comps)} elementos (internos e vizinhos diretos).</li>",
+            f"<li><b>Tecnologia nos elementos:</b> {sum(1 for c in comps if c['tec'])} de {len(comps)}; nas setas: {sum(1 for c in conx if c['tec'])} de {len(conx)}.</li>",
+            "<li><b>Cor não é o único sinal:</b> status e “Condicional” aparecem em texto; assíncrono é tracejado.</li>",
+            "<li><b>Siglas explicadas:</b> " + (f"{len(m['glossario'])} no glossário desta página." if m["glossario"] else "o spec não traz glossário (campo glossario[]).") + "</li>"])
     com_tec = sum(1 for c in comps if c["tec"])
     con_tec = sum(1 for c in conx if c["tec"])
     usados = sorted({c["status"] for c in comps} | {a["status"] for a in m["atores"] if a["status"] != "Pessoa"})
@@ -130,7 +137,7 @@ def com_codigo(texto):
 
 def leitura(m):
     # a leitura e a nota citam containers e passos numerados do Dynamic; não valem para o System Context
-    if m["nivel"] == "contexto" or (not m["leitura"] and not m["nota"]):
+    if m["nivel"] in ("contexto", "componente") or (not m["leitura"] and not m["nota"]):
         return ""
     s = '  <section>\n    <h2>Leitura da jornada</h2>\n    <p class="sub">Texto autoral vindo da jornada; o gerador só exibe.</p>\n'
     if m["leitura"]:
@@ -166,12 +173,15 @@ def avisos_html(avisos):
     return "    <ul class=\"chk\">" + "".join(f"<li><code>{html.escape(a)}</code></li>" for a in avisos) + "</ul>"
 
 
+NOME_NIVEL = {"contexto": "Contexto", "container": "Container", "componente": "Componente"}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("spec")
     ap.add_argument("--saida", required=True)
     ap.add_argument("--pasta")
-    ap.add_argument("--nivel", choices=["container", "contexto"], help="gera este nível a partir do mesmo spec (padrão: o nivel do spec)")
+    ap.add_argument("--nivel", choices=["container", "contexto", "componente"], help="gera este nível a partir do mesmo spec (padrão: o nivel do spec)")
     ap.add_argument("--manter-site", action="store_true", help="não apaga o site intermediário do Structurizr")
     ap.add_argument("--sem-validar", action="store_true", help="não roda validar_diagrama_c4 ao final")
     a = ap.parse_args()
@@ -220,15 +230,17 @@ def main():
 
     titulo = f"{m['sistema']}" + (f" · {m['journey']}" if m["journey"] else "")
     valores = {
-        "TITULO_PAGINA": html.escape(f"{titulo} · C4 {'Contexto' if m['nivel'] == 'contexto' else 'Container'}"),
+        "TITULO_PAGINA": html.escape(f"{titulo} · C4 {NOME_NIVEL.get(m['nivel'], 'Container')}"),
         "BASE": base,
         "ROTULO_ABA": html.escape(m["rotulo_aba"]),
         "H1": html.escape(m["titulo_pagina"] or m["journey"] or m["sistema"]),
-        "CRUMB": html.escape(f"{m['sistema']} · C4 nível {'Contexto' if m['nivel'] == 'contexto' else 'Container'}"),
+        "CRUMB": html.escape(f"{m['sistema']} · C4 nível {NOME_NIVEL.get(m['nivel'], 'Container')}"),
         "LEGENDA": legenda(m),
         "CONTEXTO": html.escape(spec.get("subtitulo", "")) + (" " if spec.get("subtitulo") else "") +
                     (("O <b>System Context diagram</b> mostra o sistema como uma caixa, com as pessoas e os sistemas diretamente ligados a ele; os detalhes técnicos ficam no Container diagram.")
                      if m["nivel"] == "contexto" else
+                     ("O <b>Component diagram</b> abre um container e mostra seus componentes internos, com os vizinhos ligados a eles; a estrutura entre containers fica no Container diagram.")
+                     if m["nivel"] == "componente" else
                      ("O <b>Container diagram</b> mostra a estrutura (sem ordem)" + ("; o <b>Dynamic diagram</b> mostra a mesma jornada numerada." if "dynamic" in m["titles"] else "."))),
         "LEITURA": leitura(m),
         "SUPOSICOES": suposicoes(m),

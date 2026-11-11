@@ -23,7 +23,7 @@ import sys
 import unicodedata
 
 LIMITE_PALAVRAS = 12
-NIVEIS_SUPORTADOS = ("container", "contexto")
+NIVEIS_SUPORTADOS = ("container", "contexto", "componente")
 SIS_CTX = "ctx_sistema_raiz"   # id interno da caixa única do System Context
 STATUS_TAG = {"novo": "Novo", "alterado": "Alterado", "reuso": "Reuso", "existente": "Existente"}
 FORMA_TAG = {"api": "Api", "app-web": "App Web", "app-movel": "App Móvel"}
@@ -121,6 +121,9 @@ def validar(spec):
                 if n > LIMITE_PALAVRAS:
                     erros.append(f"[limite-palavras] {chave}.{campo} '{item.get('id', item.get('de', '?'))}' tem {n} palavras (limite {LIMITE_PALAVRAS})")
 
+    if nivel == "componente":
+        erros += _erros_componente(spec)
+
     # ----- avisos
     ligados = {c.get("de") for c in conx} | {c.get("para") for c in conx} | {c.get("via") for c in conx}
     for x in atores + comps:
@@ -156,13 +159,46 @@ def validar(spec):
                 avisos.append(f"[ATOR-FORA-DO-CONTEXTO] '{i}' não se liga diretamente ao sistema; omitido do System Context (C4: só pessoas e sistemas diretamente conectados)")
             if not ctx["atores"]:
                 erros.append("[contexto] nenhum ator ou sistema externo ligado diretamente ao sistema")
+    if nivel == "componente" and not erros:
+        ef = _efetivo_componente(spec)
+        avisos = [a for a in avisos if not a.startswith(f"[ORFAO] '{ef['_foco']['id']}'")]   # o foco é a fronteira da visão
+        for i in ef["_omitidos"]:
+            if not any(a.startswith(f"[ORFAO] '{i}'") for a in avisos):
+                avisos.append(f"[FORA-DA-VISAO] '{i}' não se liga a nenhum componente interno de '{ef['_foco']['id']}'; omitido do Component diagram")
     return erros, avisos
+
+
+def _erros_componente(spec):
+    """Regras do Component diagram: um container em foco (foco_id) e seus componentes internos (container_id)."""
+    erros = []
+    comps = {c["id"]: c for c in spec.get("componentes", []) or [] if "id" in c}
+    foco = spec.get("foco_id")
+    if not foco:
+        return ["[componente] falta foco_id (id do container cujos componentes internos serão mostrados)"]
+    if foco not in comps:
+        return [f"[componente] foco_id '{foco}' não é um componente do spec"]
+    if comps[foco].get("container_id"):
+        erros.append(f"[componente] o foco '{foco}' não pode ser, ele mesmo, um componente interno")
+    internos = {i for i, c in comps.items() if c.get("container_id")}
+    for i in sorted(internos):
+        c = comps[i]
+        if c["container_id"] != foco:
+            erros.append(f"[componente] '{i}': container_id '{c['container_id']}' diferente do foco '{foco}' (uma visão mostra um container só)")
+        if c.get("fronteira_id"):
+            erros.append(f"[componente] '{i}' é interno ao container e não pode ter fronteira_id")
+    if not internos:
+        erros.append(f"[componente] nenhum componente tem container_id '{foco}'")
+    for k, c in enumerate(spec.get("conexoes", []) or []):
+        pontas = {c.get("de"), c.get("para")}
+        if foco in pontas and pontas & internos:
+            erros.append(f"[componente] conexão #{k + 1}: relação entre o container '{foco}' e seu próprio componente interno não é permitida pelo C4")
+    return erros
 
 
 # ----------------------------------------------------------------------------- modelo efetivo
 def base_view(spec):
     """Prefixo da visão estrutural: 'contexto' ou 'container' (chave das views e dos SVGs na página)."""
-    return "contexto" if spec.get("nivel") == "contexto" else "container"
+    return spec["nivel"] if spec.get("nivel") in ("contexto", "componente") else "container"
 
 
 def colapsar_contexto(spec):
@@ -203,7 +239,29 @@ def colapsar_contexto(spec):
 
 
 def modelo_efetivo(spec):
-    return colapsar_contexto(spec)["spec"] if spec.get("nivel") == "contexto" else _efetivo_container(spec)
+    if spec.get("nivel") == "contexto":
+        return colapsar_contexto(spec)["spec"]
+    if spec.get("nivel") == "componente":
+        return _efetivo_componente(spec)
+    return _efetivo_container(spec)
+
+
+def _efetivo_componente(spec):
+    """Component diagram: internos do foco + vizinhos diretamente ligados a eles. O foco fica em ["_foco"] (é a fronteira, não um elemento)."""
+    s = _efetivo_container(spec)
+    foco = next(c for c in s["componentes"] if c["id"] == s["foco_id"])
+    internos = {c["id"] for c in s["componentes"] if c.get("container_id")}
+    conx = [c for c in s["conexoes"] if c["de"] in internos or c["para"] in internos]
+    vistos = set(internos)
+    for c in conx:
+        vistos |= {c["de"], c["para"]} | ({c["via"]} if c.get("via") else set())
+    todos = [x for x in s["componentes"] + s.get("atores", []) if x["id"] != foco["id"]]
+    s["_omitidos"] = [x["id"] for x in todos if x["id"] not in vistos]
+    s["componentes"] = [c for c in s["componentes"] if c["id"] in vistos and c["id"] != foco["id"]]
+    s["atores"] = [a for a in s.get("atores", []) if a["id"] in vistos]
+    s["conexoes"] = conx
+    s["_foco"] = foco
+    return s
 
 
 def _efetivo_container(spec):
@@ -355,6 +413,9 @@ def titulos_views(spec, ef):
     base = (spec.get("subtitulo", "").rstrip(".") + ". ") if spec.get("subtitulo") else ""
     if spec.get("nivel") == "contexto":
         return {"contexto": {"title": f"System Context diagram for {sis}{escopo}", "desc": base + legenda}}
+    if spec.get("nivel") == "componente":
+        foco = ef["_foco"].get("nome", ef["_foco"]["id"])
+        return {"componente": {"title": f"Component diagram for {sis} · {foco}", "desc": base + legenda}}
     t = {"container": {"title": f"Container diagram for {sis}{escopo}", "desc": base + legenda}}
     if jid:
         t["dynamic"] = {"title": f"Dynamic diagram for {sis}{escopo}", "desc": "Ordem das interações, numeradas. " + legenda}
@@ -398,15 +459,23 @@ def gerar_dsl(spec, horizontal=True):
         return _gerar_dsl_contexto(spec, horizontal)
     ef = modelo_efetivo(spec)
     atores, comps, fronts, conx = ef.get("atores", []), ef.get("componentes", []), ef.get("fronteiras", []), ef.get("conexoes", [])
+    foco = ef.get("_foco")
+    if foco:   # Component diagram: o foco volta à lista (como container) e carrega seus internos
+        comps = [c for c in ef["componentes"]] + [foco]
+        comps.sort(key=lambda c: next(i for i, x in enumerate(spec["componentes"]) if x["id"] == c["id"]))
     sis = nome_sistema(spec)
     sis_desc = (spec.get("sistema") or {}).get("descricao", "")
     nome_de = {x["id"]: x.get("nome", x["id"]) for x in atores + comps + fronts}
     ids_node = {x["id"] for x in comps}
-    jid = spec.get("journey_id")
+    internos = [c for c in comps if c.get("container_id")] if foco else []
+    comps = [c for c in comps if c not in internos]
+    jid = spec.get("journey_id") if not foco else None
     sl = slug(jid) if jid else "geral"
     pessoas = [a for a in atores if a["tipo"] != "sistema_externo"]
 
     def ref(i):
+        if foco and i in {c["id"] for c in internos}:
+            return f"sis.{ident(foco['id'])}.{ident(i)}"
         return ("sis." if i in ids_node else "") + ident(i)
 
     L = [f"workspace {q(spec['titulo'])} {q(spec.get('subtitulo', ''))} {{", "", "    !identifiers hierarchical"]
@@ -425,7 +494,12 @@ def gerar_dsl(spec, horizontal=True):
         return f["id"] in usados or any(tem_conteudo(x) for x in filhos.get(f["id"], []))
 
     def emite_comp(c, ind):
-        L.append(f'{ind}{ident(c["id"])} = container {q(c["nome"])} {q(_descricao(c, nome_de))} {q(_tecnologia(c))} {q(_tags_comp(c))}')
+        eh_foco = bool(foco) and c["id"] == foco["id"]
+        L.append(f'{ind}{ident(c["id"])} = container {q(c["nome"])} {q(_descricao(c, nome_de))} {q(_tecnologia(c))} {q(_tags_comp(c))}' + (" {" if eh_foco else ""))
+        if eh_foco:
+            for i in internos:
+                L.append(f'{ind}    {ident(i["id"])} = component {q(i["nome"])} {q(_descricao(i, nome_de))} {q(_tecnologia(i))} {q(_tags_comp(i))}')
+            L.append(f"{ind}}}")
 
     def emite_grupo(f, ind):
         L.append(f'{ind}group {q(f["nome"].replace("/", "-"))} {{')
@@ -453,6 +527,11 @@ def gerar_dsl(spec, horizontal=True):
     inc_pessoas = "".join(f"            include {ident(a['id'])}\n" for a in pessoas)
     variantes = [("", "tb 130 100", "tb 140 110")] + ([("-h", "lr 120 110", "lr 120 110")] if horizontal else [])
     for suf, lay_c, lay_d in variantes:
+        if foco:
+            L.append(f'        component sis.{ident(foco["id"])} "componente{suf}-{sl}" {{')
+            L.append(f'            title {q(tit["componente"]["title"])}\n            description {q(tit["componente"]["desc"])}\n            include *')
+            L += [f"            autolayout {lay_c}", "        }", ""]
+            continue
         L.append(f'        container sis "container{suf}-{sl}" {{')
         L.append(f'            title {q(tit["container"]["title"])}\n            description {q(tit["container"]["desc"])}\n            include *')
         if inc_pessoas:
@@ -479,12 +558,15 @@ def modelo_pagina(spec, avisos):
     nome_de = {x["id"]: x.get("nome", x["id"]) for x in atores + comps + fronts}
     jid = spec.get("journey_id")
     ctx = spec.get("nivel") == "contexto"
+    cmp_ = spec.get("nivel") == "componente"
     return {
         "base": base_view(spec),
         "nivel": spec.get("nivel"),
-        "rotulo_aba": "System Context diagram" if ctx else "Container diagram",
+        "rotulo_aba": "System Context diagram" if ctx else ("Component diagram" if cmp_ else "Container diagram"),
         "textos": ({"comp": f"O sistema em escopo (1 caixa) e {len(atores)} pessoas e sistemas diretamente ligados a ele.",
                     "con": f"{len(conx)} setas, uma por par de elementos. Detalhes técnicos ficam no Container diagram."} if ctx else
+                   {"comp": f"{len(comps)} elementos: componentes internos de {ef['_foco']['nome']} e vizinhos ligados a eles.",
+                    "con": f"{len(conx)} interações que envolvem os componentes internos."} if cmp_ else
                    {"comp": f"{len(comps)} containers e {len(atores)} atores (pessoas e sistemas externos).",
                     "con": f"{len(conx)} interações, na ordem do spec. A numeração corresponde aos passos do Dynamic diagram."}),
         "sistema": nome_sistema(spec),

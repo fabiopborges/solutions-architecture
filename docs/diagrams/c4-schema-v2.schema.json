@@ -8,6 +8,7 @@
     "subtitulo": { "type": "string" },
     "nivel": { "enum": ["contexto", "container", "componente", "landscape", "dinamico", "deployment", "fluxo-dados"] },
     "journey_id": { "type": "string" },
+    "foco_id": { "type": "string", "description": "Só nivel=componente: id do container cujos componentes internos são mostrados." },
     "sistema": {
       "type": "object",
       "required": ["nome"],
@@ -94,7 +95,8 @@
           "dono_id": { "type": "string" },
           "retencao": { "type": "string" },
           "sensibilidade": { "type": "string" },
-          "fronteira_id": { "type": "string" }
+          "fronteira_id": { "type": "string" },
+          "container_id": { "type": "string", "description": "Só nivel=componente: id do container (foco_id) ao qual este componente interno pertence." }
         },
         "dependentRequired": { "broker": ["mensageria"] },
         "not": { "required": ["armazenamento", "mensageria"] },

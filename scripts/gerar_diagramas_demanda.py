@@ -9,12 +9,14 @@ Lê, em demandas/<x>/diagramas/:
     sequencia-<journey_id>_spec.json     (opcional, um por jornada; Jornadas do Usuário)
     c4-container.json                    (só se NÃO houver sequência: Container autorado a partir de desenho.md)
     c4-fluxo-dados.json                  (opcional: Container autorado a partir de dados.md)
+    c4-componente-<container>.json      (opcional: Component diagram de um container; nivel=componente + foco_id)
 
 Grava na mesma pasta:
     c4-container-jornada-<id>.json/.html (um por jornada; com Dynamic diagram)
     c4-container.json/.html              (união das jornadas)
     c4-contexto.html                     (System Context, do mesmo c4-container.json)
     c4-fluxo-dados.html                  (se houver o spec)
+    c4-componente-<container>.html       (se houver o spec)
     _trabalho/<nome>/workspace.dsl       (fonte Structurizr de cada diagrama, para rastreabilidade)
     RELATORIO-GERACAO.md                 (derivação, avisos e validação; repassar a quem acionou, nunca descartar)
 
@@ -81,6 +83,8 @@ def main():
         alvos.append((p, p.with_suffix(".html"), None, p.stem))
     if (dd / "c4-container.json").exists():
         alvos.append((dd / "c4-container.json", dd / "c4-contexto.html", "contexto", "contexto"))
+    for p in sorted(dd.glob("c4-componente-*.json")):   # autorados a partir de desenho.md, um por container em foco
+        alvos.append((p, p.with_suffix(".html"), None, p.stem))
     if (dd / "c4-fluxo-dados.json").exists():
         alvos.append((dd / "c4-fluxo-dados.json", dd / "c4-fluxo-dados.html", None, "fluxo-dados"))
 

@@ -268,3 +268,67 @@ class IntegracaoStructurizr(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+COMPONENTE = json.loads((AQUI / "fixtures" / "componente.v2.json").read_text(encoding="utf-8"))
+
+
+class ComponenteTests(unittest.TestCase):
+    def setUp(self):
+        self.spec = copy.deepcopy(COMPONENTE)
+
+    def test_fixture_valida_e_omite_o_que_nao_toca_os_internos(self):
+        erros, avisos = sd.validar(self.spec)
+        self.assertEqual(erros, [])
+        self.assertTrue(any(a.startswith("[FORA-DA-VISAO] 'solto'") for a in avisos))
+        self.assertFalse(any("ORFAO] 'api_ped'" in a for a in avisos))
+
+    def test_dsl_aninha_componentes_e_gera_view_component(self):
+        dsl = sd.gerar_dsl(self.spec)
+        self.assertIn("api_ped = container", dsl)
+        self.assertIn("ctl = component", dsl)
+        self.assertIn("sis.api_ped.ctl -> sis.api_ped.svc", dsl)
+        self.assertIn("sis.web -> sis.api_ped.ctl", dsl)
+        self.assertIn('component sis.api_ped "componente-geral"', dsl)
+        self.assertNotIn("solto", dsl)
+        self.assertNotIn("dynamic sis", dsl)
+
+    def test_titulo_e_base_view(self):
+        self.assertEqual(sd.base_view(self.spec), "componente")
+        t = sd.titulos_views(self.spec, sd.modelo_efetivo(self.spec))
+        self.assertTrue(t["componente"]["title"].startswith("Component diagram for Loja Exemplo · API de Pedidos"))
+
+    def test_erros_de_modelagem(self):
+        s = copy.deepcopy(self.spec); del s["foco_id"]
+        self.assertTrue(any("falta foco_id" in e for e in sd.validar(s)[0]))
+        s = copy.deepcopy(self.spec); s["foco_id"] = "nao_existe"
+        self.assertTrue(any("não é um componente" in e for e in sd.validar(s)[0]))
+        s = copy.deepcopy(self.spec); s["componentes"][2]["container_id"] = "db_ped"
+        self.assertTrue(any("diferente do foco" in e for e in sd.validar(s)[0]))
+        s = copy.deepcopy(self.spec); s["conexoes"].append({"de": "api_ped", "para": "ctl", "rotulo": "Chama", "tecnologia": "x"})
+        self.assertTrue(any("próprio componente interno" in e for e in sd.validar(s)[0]))
+        s = copy.deepcopy(self.spec)
+        for c in s["componentes"]:
+            c.pop("container_id", None)
+        self.assertTrue(any("nenhum componente tem container_id" in e for e in sd.validar(s)[0]))
+
+    def test_pagina_modelo_lista_internos_e_vizinhos_sem_o_foco(self):
+        m = sd.modelo_pagina(self.spec, [])
+        nomes = [c["nome"] for c in m["componentes"]]
+        self.assertIn("Controlador de Pedidos", nomes)
+        self.assertNotIn("API de Pedidos", nomes)
+        self.assertNotIn("Painel de Relatórios", nomes)
+        self.assertEqual(m["rotulo_aba"], "Component diagram")
+
+
+@unittest.skipUnless(shutil.which("docker"), "docker ausente")
+class ComponenteStructurizr(unittest.TestCase):
+    def test_dsl_de_componente_passa_no_validate(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.chmod(d, 0o755)
+            arq = pathlib.Path(d, "workspace.dsl")
+            arq.write_text(sd.gerar_dsl(COMPONENTE), encoding="utf-8")
+            os.chmod(arq, 0o644)
+            r = subprocess.run(["docker", "run", "--rm", "-v", f"{d}:/w", "-w", "/w", "structurizr/structurizr", "validate", "-workspace", "workspace.dsl"],
+                               capture_output=True, text=True, timeout=180)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)

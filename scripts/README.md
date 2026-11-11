@@ -22,13 +22,15 @@ Formato e regras: `docs/diagrams/c4-schema-v2.md` (schema formal em `c4-schema-v
 
 **Pré-requisitos:** `python3`, `docker` (imagem `structurizr/structurizr`, baixada na 1ª execução) e `google-chrome` ou `chromium`. A biblioteca `jsonschema` é opcional: sem ela o schema formal não é validado (aviso `[SCHEMA-NAO-VALIDADO]`) e só as checagens internas rodam.
 
-**Testes** (61, a maioria sem rede; os de página exigem Docker e Chrome e são pulados sem eles):
+**Testes** (67, a maioria sem rede; os de página exigem Docker e Chrome e são pulados sem eles):
 
 ```bash
 cd scripts && python3 -m unittest discover -s testes
 ```
 
-**Ainda não gerados:** Componente (C3), System Landscape e Deployment; `nivel: fluxo-dados` como visão filtrada (hoje, o fluxo de dados é um Container autorado).
+**Componente (C3):** `nivel: componente` + `foco_id` (ver schema v2); o orquestrador gera `c4-componente-*.html` a partir de `c4-componente-*.json`.
+
+**Ainda não gerados:** System Landscape e Deployment; `nivel: fluxo-dados` como visão filtrada (hoje, o fluxo de dados é um Container autorado).
 
 ---
 

@@ -142,6 +142,18 @@ O C4 não prescreve formas. Estas são a convenção deste projeto e devem apare
 | rótulo | verbo + tecnologia (`tecnologia` da conexão entre colchetes) |
 | numeração | só no diagrama dinâmico |
 
+## Componente (`nivel: componente`)
+
+Abre **um** container e mostra seus componentes internos (regra do C4: um Component diagram por container). Não é derivado: o spec é autorado a partir de `desenho.md`, nunca inventado.
+
+| Campo | Regra |
+|---|---|
+| `foco_id` (topo) | Obrigatório. `id` do container em foco, que precisa existir em `componentes[]`. |
+| `componentes[].container_id` | Marca o componente como interno; deve ser igual ao `foco_id`. Interno não tem `fronteira_id`. |
+| `conexoes[]` | Entram as que tocam um interno. Relação entre o container em foco e um interno dele é erro (o C4 não permite). |
+| Vizinhos | Containers e atores ligados diretamente a um interno aparecem fora da fronteira. O resto é omitido: `[FORA-DA-VISAO]`. |
+| Tabelas e legenda | Listam internos e vizinhos; o foco é a fronteira, não um elemento. Sem Dynamic diagram nem leitura da jornada. |
+
 ## Mapa nível → view do Structurizr
 
 | `nivel` | View |
@@ -156,4 +168,4 @@ O C4 não prescreve formas. Estas são a convenção deste projeto e devem apare
 
 ## Avisos do gerador (relatório sempre exibido, mesmo vazio)
 
-`[ORFAO]`, `[FALTA-CATALOGO]` (herdados da v1) · `[SEM-TECNOLOGIA]` · `[BROKER-COMO-CONTAINER]` · `[SEM-DONO]` · `[BANCO-COMPARTILHADO]` (Container) · `[ATOR-FORA-DO-CONTEXTO]` (Contexto) · `[SCHEMA-NAO-VALIDADO]` (sem a biblioteca `jsonschema`).
+`[ORFAO]`, `[FALTA-CATALOGO]` (herdados da v1) · `[SEM-TECNOLOGIA]` · `[BROKER-COMO-CONTAINER]` · `[SEM-DONO]` · `[BANCO-COMPARTILHADO]` (Container) · `[ATOR-FORA-DO-CONTEXTO]` (Contexto) · `[FORA-DA-VISAO]` (Componente) · `[SCHEMA-NAO-VALIDADO]` (sem a biblioteca `jsonschema`).

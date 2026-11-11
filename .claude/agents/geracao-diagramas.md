@@ -29,4 +29,6 @@ Ele deriva os specs (`derivar_c4.py --formato v2`), gera `c4-container.html`, `c
 
 Fluxo de dados (pedido por Documentação Final, a partir de `dados.md`): autore `c4-fluxo-dados.json` como spec v2 de Container (`nivel: "container"`), com entidades/serviços, `armazenamento`/`mensageria` e `acesso` (`le`, `grava`, `publica`, `consome`), e rode o orquestrador. Cada fila ou tópico é um container; o broker é só `broker` (tecnologia).
 
-Lacuna conhecida: os níveis Componente, Landscape e Deployment ainda não são gerados por este pipeline. Sinalize a lacuna a quem pediu; não improvise outro formato.
+Componente (C3): se `desenho.md` detalha os componentes internos de um container, autore `c4-componente-<container>.json` (`nivel: "componente"`, `foco_id` = id do container, `container_id` em cada componente interno; ver `docs/diagrams/c4-schema-v2.md`) e o orquestrador gera `c4-componente-<container>.html`. Sem esse detalhe no desenho, não gere: pergunte ao Desenho.
+
+Lacuna conhecida: os níveis Landscape e Deployment ainda não são gerados por este pipeline. Sinalize a lacuna a quem pediu; não improvise outro formato.
