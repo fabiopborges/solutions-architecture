@@ -233,7 +233,8 @@ Cada atividade tem a mesma pasta em `skills/` e `agents/` (mesmo nome), para ser
 
 - [Claude Code](https://claude.com/claude-code) instalado.
 - Nenhuma dependência externa, chave de API ou etapa de build. `tools.md` documenta conexões futuras opcionais (repositório de docs, backlog, observabilidade), todas ainda desligadas.
-- Só para **regerar** os diagramas C4: Python 3 (stdlib) e Node.js ≥18 — o [ArchiFy](https://github.com/tt-a1i/archify) já vem vendorizado em `skills/vendors/archify/` (ver [Créditos e agradecimentos](#créditos-e-agradecimentos)). Ver [`scripts/README.md`](scripts/README.md).
+- Para **gerar** os diagramas C4 de demandas novas: Python 3, Docker (imagem `structurizr/structurizr`) e Google Chrome. Ver [`scripts/README.md`](scripts/README.md).
+- Só para **regerar** diagramas de demandas anteriores a 2026-11-11 (**legado**): Node.js ≥18 — o [ArchiFy](https://github.com/tt-a1i/archify) segue vendorizado em `skills/vendors/archify/` até a remoção ser aprovada (ver [Créditos e agradecimentos](#créditos-e-agradecimentos)).
 
 ## Quickstart
 
@@ -518,6 +519,8 @@ Siga sempre esta ordem, para não repetir o anti-padrão de "agente faz-tudo" ne
 ## Créditos e agradecimentos
 
 ### ArchiFy — o motor por trás de todos os diagramas deste repositório
+
+> **Status: legado desde 2026-11-11.** Demandas novas geram diagramas com Structurizr + página HTML ([`scripts/README.md`](scripts/README.md)). O ArchiFy continua vendorizado só para os diagramas já gerados e para demandas antigas, e sua remoção depende de ADR aprovado e de uma demanda real passar pelo caminho novo.
 
 Todo diagrama C4 e de sequência que você viu acima foi renderizado pelo **[ArchiFy](https://github.com/tt-a1i/archify)**, de **[@tt-a1i](https://github.com/tt-a1i)**, com base no trabalho original *architecture-diagram-generator* da **Cocoon AI**. Nosso agradecimento sincero ao time do ArchiFy por publicar o projeto em código aberto — ele resolveu, e bem, um problema que nós teríamos resolvido mal.
 

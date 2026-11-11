@@ -1,5 +1,7 @@
 # Diagramas C4 gerados pelo pipeline (ArchiFy)
 
+> **Legado desde 2026-11-11.** Estes diagramas foram gerados pelo ArchiFy e continuam valendo como estão. Demandas novas usam Structurizr + página HTML (`scripts/README.md`, seção "Pipeline atual"). Não são regerados no caminho novo sem pedido explícito.
+
 Estes SVGs **não foram desenhados à mão**. Saíram do agente [Geração de Diagramas C4](../../../agents/geracao-diagramas/AGENT.md) rodando sobre a demanda `projeto-agentes-arquitetura-de-solucoes-junior-16-08-2026` — o OS aplicado a si mesmo, com `desenho.md`, `dados.md` e as jornadas do próprio time como fonte. Cada `.architecture.json` aqui é o spec exato que o ArchiFy renderizou; o `.svg` é a versão standalone desse render.
 
 Os diagramas de `docs/diagrams/*.mmd` (camadas do OS, execução vs. referência) continuam sendo Mermaid escrito à mão — são vistas conceituais do repositório, não saída do pipeline.
