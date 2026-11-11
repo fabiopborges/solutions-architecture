@@ -159,11 +159,11 @@ class Orquestrador(unittest.TestCase):
         codigo, saida = py("gerar_diagramas_demanda.py", self.dem)
         self.assertEqual(codigo, 0, saida[-2500:])
         dd = self.dem / "diagramas"
-        for nome in ("c4-container.html", "c4-container-jornada-pedido-confirmado.html", "c4-container-jornada-consulta-pedido.html", "c4-contexto.html"):
+        for nome in ("c4-container.html", "c4-container-jornada-pedido-confirmado.html", "c4-container-jornada-consulta-pedido.html", "c4-contexto.html", "c4-fluxo-dados.html"):
             self.assertTrue((dd / nome).exists(), nome)
         rel = (dd / "RELATORIO-GERACAO.md").read_text(encoding="utf-8")
         self.assertIn("[ORFAO] componente 'legado_orfao'", rel)
-        self.assertIn("4 de 4 diagramas gerados", rel)
+        self.assertIn("5 de 5 diagramas gerados", rel)   # inclui o fluxo de dados, filtrado do Container
         self.assertTrue((dd / "_trabalho" / "contexto" / "workspace.dsl").exists())
         self.assertFalse((dd / "_trabalho" / "contexto" / "site").exists())      # intermediário apagado
         pagina = (dd / "c4-container-jornada-pedido-confirmado.html").read_text(encoding="utf-8")

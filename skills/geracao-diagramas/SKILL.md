@@ -39,7 +39,7 @@ Fluxo: `catalogo-componentes.json` + `sequencia-<id>_spec.json` → `derivar_c4.
    - `[BROKER-COMO-CONTAINER]`: o desenho tratou o broker como componente; a regra do C4 pede cada fila/tópico como container. Devolva ao Desenho.
    - `[ATOR-FORA-DO-CONTEXTO]`: devolva ao Desenho (falta uma relação direta, ou o ator não pertence ao Contexto).
    - Falha de validação: corrija o catálogo/spec (nunca o `.html`) e rode de novo. Duas rodadas sem melhora → pare e reporte com honestidade.
-9. **Fluxo de dados** (pedido por Documentação Final, a partir de `dados.md`): autore `c4-fluxo-dados.json` como spec v2 de Container com entidades/serviços, `armazenamento`/`mensageria` e `acesso` (`le`, `grava`, `publica`, `consome`) conforme o fluxo evento-vs-consulta de `dados.md`; rode o passo 7. (O nível `fluxo-dados` como visão filtrada ainda não existe.)
+9. **Fluxo de dados** (pedido por Documentação Final, a partir de `dados.md`): o orquestrador já gera `c4-fluxo-dados.html` sozinho, como visão **filtrada** do `c4-container.json` (só armazenamentos, filas/tópicos e quem os acessa; `nivel: fluxo-dados`), desde que o Container tenha `armazenamento`/`mensageria` e `acesso` (`le`, `grava`, `publica`, `consome`) preenchidos conforme `dados.md`. Só autore `c4-fluxo-dados.json` à mão se o fluxo de `dados.md` precisar de algo que o Container não tem; ele tem precedência sobre o filtro. Rode o passo 7.
 10. **Sequência:** não há mais `sequencia-<id>.html`. O Dynamic diagram numerado dentro de `c4-container-jornada-<id>.html` a substitui; `sequencia-<id>_spec.json` continua sendo a fonte, de Jornadas do Usuário.
 11. Se a estrutura em `desenho.md`/`dados.md` for insuficiente ou ambígua para virar diagrama, devolva a pergunta a quem produziu o documento em vez de inventar.
 

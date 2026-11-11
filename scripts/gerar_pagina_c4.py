@@ -137,7 +137,7 @@ def com_codigo(texto):
 
 def leitura(m):
     # a leitura e a nota citam containers e passos numerados do Dynamic; não valem para o System Context
-    if m["nivel"] in ("contexto", "componente") or (not m["leitura"] and not m["nota"]):
+    if m["nivel"] in ("contexto", "componente", "fluxo-dados") or (not m["leitura"] and not m["nota"]):
         return ""
     s = '  <section>\n    <h2>Leitura da jornada</h2>\n    <p class="sub">Texto autoral vindo da jornada; o gerador só exibe.</p>\n'
     if m["leitura"]:
@@ -173,7 +173,7 @@ def avisos_html(avisos):
     return "    <ul class=\"chk\">" + "".join(f"<li><code>{html.escape(a)}</code></li>" for a in avisos) + "</ul>"
 
 
-NOME_NIVEL = {"contexto": "Contexto", "container": "Container", "componente": "Componente"}
+NOME_NIVEL = {"contexto": "Contexto", "container": "Container", "componente": "Componente", "fluxo-dados": "Fluxo de dados"}
 
 
 def main():
@@ -181,7 +181,7 @@ def main():
     ap.add_argument("spec")
     ap.add_argument("--saida", required=True)
     ap.add_argument("--pasta")
-    ap.add_argument("--nivel", choices=["container", "contexto", "componente"], help="gera este nível a partir do mesmo spec (padrão: o nivel do spec)")
+    ap.add_argument("--nivel", choices=["container", "contexto", "componente", "fluxo-dados"], help="gera este nível a partir do mesmo spec (padrão: o nivel do spec)")
     ap.add_argument("--manter-site", action="store_true", help="não apaga o site intermediário do Structurizr")
     ap.add_argument("--sem-validar", action="store_true", help="não roda validar_diagrama_c4 ao final")
     a = ap.parse_args()
@@ -241,6 +241,8 @@ def main():
                      if m["nivel"] == "contexto" else
                      ("O <b>Component diagram</b> abre um container e mostra seus componentes internos, com os vizinhos ligados a eles; a estrutura entre containers fica no Container diagram.")
                      if m["nivel"] == "componente" else
+                     ("O <b>diagrama de fluxo de dados</b> é o Container diagram filtrado: só armazenamentos, filas e tópicos, e os containers que os leem, gravam, publicam ou consomem.")
+                     if m["nivel"] == "fluxo-dados" else
                      ("O <b>Container diagram</b> mostra a estrutura (sem ordem)" + ("; o <b>Dynamic diagram</b> mostra a mesma jornada numerada." if "dynamic" in m["titles"] else "."))),
         "LEITURA": leitura(m),
         "SUPOSICOES": suposicoes(m),

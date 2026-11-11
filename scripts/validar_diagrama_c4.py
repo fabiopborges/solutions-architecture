@@ -133,7 +133,7 @@ def checa_html(rel, spec, pagina_html):
 
 
 # ----------------------------------------------------------------------------- 5. runtime
-ESTADO_INICIAL_RE = re.compile(r'let view = "(\w+)", layout = "v", theme = "light"')
+ESTADO_INICIAL_RE = re.compile(r'let view = "([\w-]+)", layout = "v", theme = "light"')
 
 
 def chrome():
@@ -209,7 +209,7 @@ def main():
     ap.add_argument("spec")
     ap.add_argument("html")
     ap.add_argument("--pasta", help="pasta com workspace.dsl (padrão: <html>.d)")
-    ap.add_argument("--nivel", choices=["container", "contexto", "componente"])
+    ap.add_argument("--nivel", choices=["container", "contexto", "componente", "fluxo-dados"])
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args()
     pasta = a.pasta or str(pathlib.Path(a.html).with_suffix(".d"))

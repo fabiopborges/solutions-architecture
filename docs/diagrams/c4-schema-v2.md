@@ -154,6 +154,10 @@ Abre **um** container e mostra seus componentes internos (regra do C4: um Compon
 | Vizinhos | Containers e atores ligados diretamente a um interno aparecem fora da fronteira. O resto é omitido: `[FORA-DA-VISAO]`. |
 | Tabelas e legenda | Listam internos e vizinhos; o foco é a fronteira, não um elemento. Sem Dynamic diagram nem leitura da jornada. |
 
+## Fluxo de dados (`nivel: fluxo-dados`)
+
+Sai do **mesmo spec** do Container (`--nivel fluxo-dados`), sem modelagem própria: ficam os armazenamentos, as filas/tópicos/streams e os containers e atores ligados diretamente a eles. O resto é omitido sem aviso (seria ruído). Filas ficam sempre visíveis (`mensageria_modo: implicita` é ignorado). Sem Dynamic diagram nem leitura da jornada. Erro `[fluxo-dados]` se nenhum componente tem `armazenamento` ou `mensageria`.
+
 ## Mapa nível → view do Structurizr
 
 | `nivel` | View |

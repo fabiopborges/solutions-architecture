@@ -332,3 +332,55 @@ class ComponenteStructurizr(unittest.TestCase):
             r = subprocess.run(["docker", "run", "--rm", "-v", f"{d}:/w", "-w", "/w", "structurizr/structurizr", "validate", "-workspace", "workspace.dsl"],
                                capture_output=True, text=True, timeout=180)
             self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+
+class FluxoDadosTests(unittest.TestCase):
+    def setUp(self):
+        self.spec = json.loads((AQUI / "fixtures" / "dados-mensageria.v2.json").read_text(encoding="utf-8"))
+        self.spec["nivel"] = "fluxo-dados"
+
+    def test_filtra_para_dados_e_vizinhos_e_mantem_filas_visiveis(self):
+        ef = sd.modelo_efetivo(self.spec)
+        dados = {c["id"] for c in self.spec["componentes"] if c.get("armazenamento") or c.get("mensageria")}
+        self.assertTrue(dados <= {c["id"] for c in ef["componentes"]})
+        for c in ef["conexoes"]:
+            self.assertTrue({c["de"], c["para"]} & dados)
+        self.assertTrue(ef["_omitidos"])   # o fixture tem elementos que não tocam dados (ex.: o comprador)
+
+    def test_dsl_usa_view_fluxo_dados_sem_dynamic(self):
+        dsl = sd.gerar_dsl(self.spec)
+        self.assertIn('container sis "fluxo-dados-', dsl)
+        self.assertNotIn("dynamic sis", dsl)
+        self.assertEqual(sd.base_view(self.spec), "fluxo-dados")
+        self.assertIn("fluxo de dados", sd.titulos_views(self.spec, sd.modelo_efetivo(self.spec))["fluxo-dados"]["title"])
+
+    def test_nome_da_view_do_dsl_bate_com_o_slug_da_pagina(self):
+        # regressão: a página abria em branco porque o slug vinha do journey_id e o DSL usava "geral"
+        m = sd.modelo_pagina(self.spec, [])
+        self.assertEqual(m["slug"], "geral")
+        self.assertIn(f'"fluxo-dados-{m["slug"]}"', sd.gerar_dsl(self.spec))
+        self.assertNotIn("jornada", m["titles"]["fluxo-dados"]["title"])
+
+    def test_sem_dados_e_erro(self):
+        s = copy.deepcopy(self.spec)
+        for c in s["componentes"]:
+            c.pop("armazenamento", None); c.pop("mensageria", None)
+        self.assertTrue(any("[fluxo-dados]" in e for e in sd.validar(s)[0]))
+
+    def test_nao_polui_avisos_com_o_que_foi_omitido(self):
+        erros, avisos = sd.validar(self.spec)
+        self.assertEqual(erros, [])
+        omit = sd.modelo_efetivo(self.spec)["_omitidos"]
+        for i in omit:
+            self.assertFalse(any(a.startswith(f"[ORFAO] '{i}'") for a in avisos))
+
+    @unittest.skipUnless(shutil.which("docker"), "docker ausente")
+    def test_dsl_passa_no_validate(self):
+        with tempfile.TemporaryDirectory() as d:
+            os.chmod(d, 0o755)
+            arq = pathlib.Path(d, "workspace.dsl")
+            arq.write_text(sd.gerar_dsl(self.spec), encoding="utf-8")
+            os.chmod(arq, 0o644)
+            r = subprocess.run(["docker", "run", "--rm", "-v", f"{d}:/w", "-w", "/w", "structurizr/structurizr", "validate", "-workspace", "workspace.dsl"],
+                               capture_output=True, text=True, timeout=180)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
