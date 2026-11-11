@@ -51,7 +51,7 @@ Fontes oficiais usadas nas regras de dados e mensageria (conferidas em 2026-11-1
 2. **Independência de deploy.** O diagrama de Container não mostra a topologia do broker. Quais filas rodam em qual broker ou cluster pertence ao diagrama de `deployment`.
 3. **Direção da seta.** O C4 mostra exemplos "sends messages to" da esquerda para a direita e diz que, para destacar publicador/assinante, é possível inverter a direção. O schema aceita as duas:
    - As conexões são sempre **autoradas** na convenção do iniciador (consumidor → fila, `acesso: consome`); `seta_mensageria: fluxo` só muda o desenho.
-   - `seta_mensageria: iniciador` (padrão): a seta sai de quem inicia a ação. `publica` e `consome` apontam do serviço para a fila/tópico. O consumo por polling (caso de consumo por polling) fica correto.
+   - `seta_mensageria: iniciador` (padrão): a seta sai de quem inicia a ação. `publica` e `consome` apontam do serviço para a fila/tópico. O consumo por polling fica correto.
    - `seta_mensageria: fluxo`: a seta segue a mensagem. `consome` é desenhado da fila/tópico para o consumidor. Indicado para pub/sub.
 4. **Mensagem × chamada de API.** Distinguidas por estilo: `publica`/`consome` usam linha tracejada, como a assíncrona, e `chama` usa linha contínua. O C4 pede outro estilo de linha ou cor, e deixa a escolha à notação do projeto.
 5. **Modo implícito (`mensageria_modo: implicita`).** Em relações ponto a ponto a página permite omitir a fila e pôr o nome na seta ("via"). O gerador colapsa publicador → fila → consumidor numa seta rotulada `via <fila>`, só quando a fila tem exatamente 1 publicador e 1 consumidor. Tópicos com vários assinantes continuam explícitos. Nenhuma versão é melhor que a outra; o modo é escolha do autor.
