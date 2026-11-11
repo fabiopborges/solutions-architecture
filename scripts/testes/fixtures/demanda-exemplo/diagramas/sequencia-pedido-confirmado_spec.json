@@ -1,0 +1,80 @@
+{
+  "journey_id": "pedido-confirmado",
+  "titulo": "Pedido confirmado",
+  "titulo_pagina": "Pedido confirmado",
+  "leitura": [
+    {
+      "titulo": "Pedido",
+      "texto": "O comprador faz o pedido e a API o grava."
+    },
+    {
+      "titulo": "Entrega",
+      "texto": "O tópico `PedidoConfirmado` aciona as entregas."
+    }
+  ],
+  "nota": "Cobrança depende da hipótese Q7.",
+  "mensagens": [
+    {
+      "ordem": 1,
+      "de": "cli",
+      "para": "web",
+      "rotulo": "Faz pedido",
+      "protocolo": "HTTPS"
+    },
+    {
+      "ordem": 2,
+      "de": "web",
+      "para": "api_ped",
+      "rotulo": "Envia pedido",
+      "protocolo": "REST/JSON"
+    },
+    {
+      "ordem": 3,
+      "de": "api_ped",
+      "para": "db_ped",
+      "rotulo": "Grava pedido",
+      "tecnologia": "SQL",
+      "acesso": "grava"
+    },
+    {
+      "ordem": 4,
+      "de": "db_ped",
+      "para": "api_ped",
+      "rotulo": "Confirma gravação",
+      "tipo": "retorno"
+    },
+    {
+      "ordem": 5,
+      "de": "api_ped",
+      "para": "pgto",
+      "rotulo": "Cobra pedido",
+      "protocolo": "HTTPS",
+      "condicao": "Q7"
+    },
+    {
+      "ordem": 6,
+      "de": "api_ped",
+      "para": "t_ped",
+      "rotulo": "Publica pedido confirmado",
+      "tecnologia": "Kafka producer",
+      "acesso": "publica",
+      "assincrona": true
+    },
+    {
+      "ordem": 7,
+      "de": "ent",
+      "para": "t_ped",
+      "rotulo": "Consome pedido confirmado",
+      "tecnologia": "Kafka consumer",
+      "acesso": "consome",
+      "assincrona": true
+    },
+    {
+      "ordem": 8,
+      "de": "ent",
+      "para": "ent",
+      "rotulo": "Valida endereço",
+      "tipo": "self"
+    }
+  ]
+}

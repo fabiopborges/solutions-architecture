@@ -24,6 +24,15 @@
       }
     },
     "nota": { "type": "string" },
+    "suposicoes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["titulo", "itens"],
+        "properties": { "titulo": { "type": "string" }, "itens": { "type": "array", "items": { "type": "string" } } },
+        "additionalProperties": false
+      }
+    },
     "titulo_pagina": { "type": "string" },
     "mensageria_modo": { "enum": ["explicita", "implicita"], "default": "explicita" },
     "seta_mensageria": { "enum": ["iniciador", "fluxo"], "default": "iniciador" },

@@ -141,6 +141,17 @@ def leitura(m):
     return s + "  </section>\n"
 
 
+def suposicoes(m):
+    """Suposições e trade-offs já escritos em desenho.md (tradução, nunca conteúdo novo). Valem em todos os níveis."""
+    if not m["suposicoes"]:
+        return ""
+    s = '  <section>\n    <h2>Suposições e trade-offs</h2>\n    <p class="sub">Traduzidos de desenho.md; rastreabilidade das decisões que este diagrama assume.</p>\n'
+    for bloco in m["suposicoes"]:
+        s += f'    <h3 style="font-size:14px;margin:12px 0 4px">{html.escape(bloco["titulo"])}</h3>\n    <ul class="chk">\n'
+        s += "".join(f"      <li>{com_codigo(i)}</li>\n" for i in bloco["itens"]) + "    </ul>\n"
+    return s + "  </section>\n"
+
+
 def glossario(m):
     if not m["glossario"]:
         return ""
@@ -161,6 +172,7 @@ def main():
     ap.add_argument("--saida", required=True)
     ap.add_argument("--pasta")
     ap.add_argument("--nivel", choices=["container", "contexto"], help="gera este nível a partir do mesmo spec (padrão: o nivel do spec)")
+    ap.add_argument("--manter-site", action="store_true", help="não apaga o site intermediário do Structurizr")
     ap.add_argument("--sem-validar", action="store_true", help="não roda validar_diagrama_c4 ao final")
     a = ap.parse_args()
 
@@ -219,6 +231,7 @@ def main():
                      if m["nivel"] == "contexto" else
                      ("O <b>Container diagram</b> mostra a estrutura (sem ordem)" + ("; o <b>Dynamic diagram</b> mostra a mesma jornada numerada." if "dynamic" in m["titles"] else "."))),
         "LEITURA": leitura(m),
+        "SUPOSICOES": suposicoes(m),
         "GLOSSARIO": glossario(m),
         "AVISOS": avisos_html(avisos),
         "ADERENCIA": aderencia(m),
@@ -233,6 +246,8 @@ def main():
     out = re.sub(r"\{\{([A-Z0-9_]+)\}\}", lambda mo: valores[mo.group(1)], tpl)   # passe único: valores nunca são re-expandidos
     saida.write_text(out, encoding="utf-8")
     print("ok:", saida, f"({len(out) // 1024} KB)")
+    if not a.manter_site:
+        shutil.rmtree(site, ignore_errors=True)   # intermediário descartável; o workspace.dsl fica para rastreabilidade
     if not a.sem_validar:
         import validar_diagrama_c4 as vd
         rel = vd.validar_tudo(spec_path, saida, pasta, nivel=a.nivel)

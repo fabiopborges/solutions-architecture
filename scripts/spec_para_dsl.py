@@ -506,6 +506,7 @@ def modelo_pagina(spec, avisos):
         "tem_grupo": any(c.get("fronteira_id") for c in comps),
         "glossario": spec.get("glossario", []),
         "titulo_pagina": spec.get("titulo_pagina", ""),
+        "suposicoes": spec.get("suposicoes", []),
         "leitura": spec.get("leitura", []),
         "nota": spec.get("nota", ""),
         "avisos": avisos,
