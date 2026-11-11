@@ -126,6 +126,7 @@ def main():
     ap.add_argument("spec")
     ap.add_argument("--saida", required=True)
     ap.add_argument("--pasta")
+    ap.add_argument("--sem-validar", action="store_true", help="não roda validar_diagrama_c4 ao final")
     a = ap.parse_args()
 
     spec_path = pathlib.Path(a.spec).resolve()
@@ -189,6 +190,12 @@ def main():
     out = re.sub(r"\{\{([A-Z0-9_]+)\}\}", lambda mo: valores[mo.group(1)], tpl)   # passe único: valores nunca são re-expandidos
     saida.write_text(out, encoding="utf-8")
     print("ok:", saida, f"({len(out) // 1024} KB)")
+    if not a.sem_validar:
+        import validar_diagrama_c4 as vd
+        rel = vd.validar_tudo(spec_path, saida, pasta)
+        rel.imprime()
+        if rel.falhou:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

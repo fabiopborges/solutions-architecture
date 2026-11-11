@@ -222,24 +222,34 @@ def _caminho_fronteira(fid, fronts):
     return " / ".join(reversed(nomes))
 
 
+# Paleta única: o gerador a aplica e o validador (validar_diagrama_c4.py) mede o contraste dela.
+# (fundo, texto) por tag de elemento. Mesmas cores nos dois temas, como no piloto aprovado.
+PALETA_ELEMENTOS = {
+    "Person": ("#08427b", "#ffffff"), "Software System": ("#1168bd", "#ffffff"), "Container": ("#1168bd", "#ffffff"),
+    "Novo": ("#1168bd", "#ffffff"), "Reuso": ("#8ec2f2", "#0b1f33"),
+    "Existente": ("#a8a8a8", "#111111"), "Alterado": ("#e76f51", "#111111"),
+}
+# por tema: cor da seta, cor da seta condicional, texto e borda do grupo, fundo do canvas (o da página)
+PALETA_TEMA = {
+    "light": {"seta": "#444444", "condicional": "#a35f00", "grupo_txt": "#444444", "grupo_borda": "#888888", "canvas": "#ffffff"},
+    "dark": {"seta": "#d0d7e2", "condicional": "#f0a940", "grupo_txt": "#d0d7e2", "grupo_borda": "#8a94a6", "canvas": "#111111"},
+}
+FORMAS_TAG = (("Api", "Hexagon"), ("App Web", "WebBrowser"), ("App Móvel", "MobileDevicePortrait"),
+              ("Armazenamento", "Cylinder"), ("Mensageria", "Pipe"))
+
+
 def _estilos(modo):
-    claro = modo == "light"
-    cor_seta = "#444444" if claro else "#d0d7e2"
-    cor_cond = "#b36b00" if claro else "#f0a940"
-    grupo_txt, grupo_borda = ("#444444", "#888888") if claro else ("#d0d7e2", "#8a94a6")
-    el = lambda tag, extra, bg, fg: f'                element "{tag}" {{\n{extra}                    background {bg}\n                    color {fg}\n                }}\n'
+    pt = PALETA_TEMA[modo]
     s = f"            {modo} {{\n"
-    s += '                element "Person" {\n                    shape Person\n                    background #08427b\n                    color #ffffff\n                }\n'
-    s += el("Software System", "", "#1168bd", "#ffffff") + el("Container", "", "#1168bd", "#ffffff")
-    s += el("Novo", "", "#1168bd", "#ffffff") + el("Reuso", "", "#8ec2f2", "#0b1f33")
-    s += el("Existente", "", "#a8a8a8", "#111111") + el("Alterado", "", "#e76f51", "#111111")
-    for tag, forma in (("Api", "Hexagon"), ("App Web", "WebBrowser"), ("App Móvel", "MobileDevicePortrait"),
-                       ("Armazenamento", "Cylinder"), ("Mensageria", "Pipe")):
+    for tag, (bg, fg) in PALETA_ELEMENTOS.items():
+        forma = "                    shape Person\n" if tag == "Person" else ""
+        s += f'                element "{tag}" {{\n{forma}                    background {bg}\n                    color {fg}\n                }}\n'
+    for tag, forma in FORMAS_TAG:
         s += f'                element "{tag}" {{\n                    shape {forma}\n                }}\n'
-    s += f'                element "Group" {{\n                    color {grupo_txt}\n                    stroke {grupo_borda}\n                    strokeWidth 2\n                }}\n'
-    s += f'                relationship "Relationship" {{\n                    thickness 3\n                    dashed false\n                    color {cor_seta}\n                    routing Curved\n                    fontSize 22\n                    width 420\n                }}\n'
+    s += f'                element "Group" {{\n                    color {pt["grupo_txt"]}\n                    stroke {pt["grupo_borda"]}\n                    strokeWidth 2\n                }}\n'
+    s += f'                relationship "Relationship" {{\n                    thickness 3\n                    dashed false\n                    color {pt["seta"]}\n                    routing Curved\n                    fontSize 22\n                    width 420\n                }}\n'
     s += '                relationship "Assíncrono" {\n                    dashed true\n                }\n'
-    s += f'                relationship "Condicional" {{\n                    color {cor_cond}\n                }}\n'
+    s += f'                relationship "Condicional" {{\n                    color {pt["condicional"]}\n                }}\n'
     s += "            }\n"
     return s
 
