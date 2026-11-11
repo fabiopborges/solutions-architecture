@@ -50,7 +50,7 @@ Agente: Documentação Final (ponto de sincronização total da cadeia — todos
 
 ### Diagrama de componentes/integrações (C1–Cn)
 
-<Diagrama consolidado por [[agents/geracao-diagramas/AGENT]], referenciado por caminho em `demandas/<nome-da-demanda>/diagramas/`.>
+<Diagramas gerados por [[agents/geracao-diagramas/AGENT]], referenciados por caminho em `demandas/<nome-da-demanda>/diagramas/`: `c4-contexto.html`, `c4-container.html` e `c4-container-jornada-<id>.html`. Citar os avisos de `RELATORIO-GERACAO.md` que ainda estiverem abertos.>
 
 ### Componentes (resumo — detalhamento completo em `desenho.md`)
 

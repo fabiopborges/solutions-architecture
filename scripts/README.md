@@ -1,5 +1,41 @@
 # Gerador de diagramas C4
 
+## Pipeline atual (desde 2026-11-11): Structurizr + página HTML — demandas novas
+
+Um comando gera todos os diagramas de uma demanda:
+
+```bash
+python3 scripts/gerar_diagramas_demanda.py demandas/<nome-da-demanda>
+```
+
+Entrada, em `demandas/<x>/diagramas/`: `catalogo-componentes.json` (formato v2, obrigatório), `sequencia-<id>_spec.json` (um por jornada, opcional) e, sem sequência, `c4-container.json` autorado a partir de `desenho.md`; `c4-fluxo-dados.json` é opcional. Saída na mesma pasta: `c4-container-jornada-<id>.html` (com Dynamic diagram numerado), `c4-container.html`, `c4-contexto.html`, `c4-fluxo-dados.html`, `_trabalho/<nome>/workspace.dsl` e `RELATORIO-GERACAO.md`. O relatório lista a derivação (`[ORFAO]`, `[FALTA-CATALOGO]`) e os avisos e a validação de cada página; quem aciona o gerador o lê inteiro. Sai com código 1 se qualquer diagrama falhar. Recusa demandas que já têm `*.architecture.json` (legado), salvo `--forcar`.
+
+| Script | O que faz |
+|---|---|
+| `gerar_diagramas_demanda.py` | Orquestra tudo para uma demanda e grava o relatório |
+| `derivar_c4.py --formato v2` | Catálogo + sequências → specs de Container v2 (por jornada e geral). Ordem do catálogo, determinístico. Sem o flag, comportamento antigo (v1) |
+| `spec_para_dsl.py` | Spec v2 → Structurizr DSL; valida referências, limite de 12 palavras e schema; emite os avisos |
+| `gerar_pagina_c4.py` | Spec v2 → página HTML autocontida (Docker/Structurizr + Chrome headless + `skills/geracao-diagramas/templates/pagina.template.html`); `--nivel contexto` gera o System Context do mesmo spec |
+| `validar_diagrama_c4.py` | Valida spec, DSL, contraste da paleta, SVGs (elementos e rótulos presentes) e abertura da página no Chrome; roda ao final do gerador (`--sem-validar` desliga) |
+
+Formato e regras: `docs/diagrams/c4-schema-v2.md` (schema formal em `c4-schema-v2.schema.json`).
+
+**Pré-requisitos:** `python3`, `docker` (imagem `structurizr/structurizr`, baixada na 1ª execução) e `google-chrome` ou `chromium`. A biblioteca `jsonschema` é opcional: sem ela o schema formal não é validado (aviso `[SCHEMA-NAO-VALIDADO]`) e só as checagens internas rodam.
+
+**Testes** (61, a maioria sem rede; os de página exigem Docker e Chrome e são pulados sem eles):
+
+```bash
+cd scripts && python3 -m unittest discover -s testes
+```
+
+**Ainda não gerados:** Componente (C3), System Landscape e Deployment; `nivel: fluxo-dados` como visão filtrada (hoje, o fluxo de dados é um Container autorado).
+
+---
+
+## Pipeline legado (ArchiFy) — só demandas anteriores a 2026-11-11
+
+Nada abaixo é usado em demanda nova. Fica documentado para as demandas que já têm artefatos ArchiFy.
+
 Quatro scripts. `derivar_c4.py` (MVP 7) monta um spec de Container/Contexto automaticamente a partir de um catálogo estático + sequências por jornada, em vez de alguém traduzir `desenho.md` à mão — ver `../c4-schema.md`, seção "Pipeline invertido", para o porquê. `montar_candidato_arquitetura_archify.py` e `montar_candidato_sequencia_archify.py` traduzem esses specs para candidatos MÍNIMOS no formato nativo do ArchiFy (vendorizado em `skills/vendors/archify/`) — sem geometria em pixel, sem chamar o CLI. Quem chama `archify.mjs validate`/`deliver` sobre o candidato e conduz o loop de reparo pontual é o agente `geracao-diagramas`, via `Bash`, direto — não um script Python. `exportar_svg_do_html_archify.py` fecha o ciclo do outro lado: extrai do HTML já entregue um SVG standalone, leve o bastante para ser versionado e embutido em documentação.
 
 > **Pipeline nativo ArchiFy (2026-08-XX).** Substitui a geração anterior, em que `exportar_archify.py`/`exportar_sequencia_archify.py` calculavam toda a geometria (camadas, barycenter, posição em pixel, roteamento de conexão, `viewBox`) em Python e só entregavam ao ArchiFy um `.architecture.json` já 100% posicionado — isso contornava o `layout: {mode:"grid"}` nativo e o Automatic Port Spread do próprio ArchiFy. Ver `memory.md`, entrada de 2026-08-16, para o raciocínio completo da migração.

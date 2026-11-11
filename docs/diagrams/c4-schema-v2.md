@@ -34,6 +34,7 @@ Fontes oficiais usadas nas regras de dados e mensageria (conferidas em 2026-11-1
 | nível superior | `sistema` | `{nome, descricao}`, **novo**. Sistema em escopo. Se ausente, usa o trecho do `titulo` antes de " — ". |
 | nível superior | `leitura[]` | `{titulo, texto}`, **novo**. Passos de leitura da jornada, em texto autoral (vem de `jornadas.md`; o gerador só exibe, na ordem). Backticks viram `<code>`. |
 | nível superior | `titulo_pagina` | string, **novo**. Título legível da página (ex.: nome da jornada). Se ausente, usa `journey_id`, ou o nome do sistema. |
+| nível superior | `suposicoes[]` | `{titulo, itens[]}`, **novo**. Suposições e trade-offs **já escritos** em `desenho.md` (tradução, nunca conteúdo novo). Seção própria na página, em todos os níveis. Substitui os `cards[]` do ArchiFy. |
 | nível superior | `nota` | string, **novo**. Aviso destacado (ex.: premissas em aberto). Só exibe. |
 | nível superior | `mensageria_modo` | `explicita` (padrão) \| `implicita`. Ver "Mensageria". |
 | nível superior | `seta_mensageria` | `iniciador` (padrão) \| `fluxo`. Ver "Mensageria". |
@@ -77,6 +78,25 @@ Fixas no gerador, nos temas claro e escuro. Cor nunca é o único sinal: a legen
 | pessoa | `#08427b` | branco | Ator humano |
 
 `alterado` não tinha cor no piloto Structurizr; a cor vem da v1. Texto escuro `#111` porque branco sobre `#e76f51` tem contraste baixo (~3:1). Conferir no tema escuro na fase 2.
+
+## Catálogo, sequência e derivação (como o spec v2 nasce)
+
+O agente `geracao-diagramas` não escreve o Container à mão quando há jornada: ele deriva (`derivar_c4.py --formato v2`).
+
+**`catalogo-componentes.json`** (fonte estática, 1 por demanda): os campos de topo `sistema`, `glossario`, `suposicoes`, `titulo_pagina`, `mensageria_modo`, `seta_mensageria`, mais `atores[]`, `fronteiras[]` e `componentes[]` com todos os campos deste schema, **sem** `conexoes[]`. Campos de tecnologia e de dado só entram com o que `desenho.md`, `infraestrutura.md` ou `dados.md` já decidiram; sem fonte, ficam vazios e o gerador avisa.
+
+**`sequencia-<journey_id>_spec.json`** (fonte dinâmica, de Jornadas do Usuário): `journey_id`, `titulo`, `mensagens[]` com `ordem`, `de`, `para`, `rotulo`, `tipo` (`chamada`, `retorno`, `self`), `assincrona`, `protocolo`, e os campos v2 `tecnologia`, `acesso`, `via` e `condicao`. Opcionais de topo, só exibidos: `leitura[]`, `nota`, `titulo_pagina`, `suposicoes[]`.
+
+**Regras de derivação (v2):**
+- `retorno`, `self` e `de == para` não viram conexão.
+- Deduplicação por `(de, para, protocolo ou tecnologia, acesso)`: "lê" e "grava" entre o mesmo par **não** se fundem. A primeira ocorrência define o rótulo; `journey_id` vira lista quando a conexão aparece em várias jornadas.
+- A `tecnologia` da conexão é a da mensagem ou, se ausente, o `protocolo`.
+- Atores e componentes saem na **ordem do catálogo** (o DSL, e portanto o layout, é determinístico).
+- Container por jornada leva `leitura`, `nota` e `titulo_pagina` da sequência; o Container geral não leva narrativa de jornada.
+- `[ORFAO]`: componente do catálogo sem uso em nenhuma jornada, excluído. `[FALTA-CATALOGO]`: `id` de sequência fora do catálogo, **não importado** (a v1 o importava como "desconhecido"); o gerador recusa a conexão até a correção. `[DONO-FORA-DA-VISAO]`: `dono_id` aponta para um elemento que não entra na visão; o campo é omitido.
+- O Contexto **não** é derivado: o gerador o produz do Container geral (`--nivel contexto`).
+
+**Diferenças deliberadas em relação ao ArchiFy:** não há `cards[]` (suposições vão em `suposicoes[]`), nem `meta.views`/`segments[]` (a página tem abas Container/Dynamic, layouts vertical/horizontal e legenda), nem diagrama de sequência separado (o Dynamic diagram numerado o substitui).
 
 ## Contexto (`nivel: contexto`)
 

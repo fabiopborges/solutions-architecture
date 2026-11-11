@@ -114,7 +114,7 @@ def validar(spec):
             erros.append(f"[ref] conexão #{i + 1}: via '{c['via']}' não é um componente com mensageria")
 
     # limite de palavras (campos que aparecem na figura). `condicao` fica fora do limite.
-    for chave, campos in (("componentes", ("nome", "descricao")), ("atores", ("nome", "papel")), ("conexoes", ("rotulo",))):
+    for chave, campos in (("componentes", ("nome", "descricao")), ("atores", ("nome", "papel")), ("fronteiras", ("nome",)), ("conexoes", ("rotulo",))):
         for item in spec.get(chave, []) or []:
             for campo in campos:
                 n = palavras(item.get(campo))

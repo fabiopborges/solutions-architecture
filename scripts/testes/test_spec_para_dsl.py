@@ -48,6 +48,12 @@ class Validacao(unittest.TestCase):
         erros, _ = sd.validar(s)
         self.assertTrue(any("limite-palavras" in e for e in erros))
 
+    def test_nome_de_fronteira_tambem_tem_limite(self):
+        s = spec()
+        s["fronteiras"][0]["nome"] = " ".join(["palavra"] * 13)
+        erros, _ = sd.validar(s)
+        self.assertTrue(any("limite-palavras" in e and "fronteiras.nome" in e for e in erros))
+
     def test_condicao_fica_fora_do_limite(self):
         s = spec()
         s["conexoes"][0]["condicao"] = " ".join(["x"] * 30)
