@@ -3,6 +3,7 @@
 
 Uso:
     python3 scripts/gerar_diagramas_demanda.py demandas/<nome-da-demanda> [--titulo-base TEXTO] [--sem-validar] [--forcar]
+            [--layout dagre|elk] [--setas curvas|retas-arredondadas]
 
 Lê, em demandas/<x>/diagramas/:
     catalogo-componentes.json            (obrigatório; formato v2, ver docs/diagrams/c4-schema-v2.md)
@@ -45,6 +46,8 @@ def main():
     ap.add_argument("--titulo-base")
     ap.add_argument("--sem-validar", action="store_true")
     ap.add_argument("--forcar", action="store_true", help="permite rodar numa demanda que já tem diagramas ArchiFy")
+    ap.add_argument("--layout", choices=["dagre", "elk"], default="dagre", help="motor de layout (repassado a gerar_pagina_c4.py; elk exige node e npm install em scripts/elk)")
+    ap.add_argument("--setas", choices=["curvas", "retas-arredondadas"], default="curvas", help="estilo das setas (repassado a gerar_pagina_c4.py)")
     a = ap.parse_args()
 
     dd = pathlib.Path(a.demanda).resolve() / "diagramas"
@@ -96,6 +99,7 @@ def main():
         cmd = [sys.executable, str(AQUI / "gerar_pagina_c4.py"), str(spec), "--saida", str(html), "--pasta", str(dd / "_trabalho" / nome)]
         if nivel:
             cmd += ["--nivel", nivel]
+        cmd += ["--layout", a.layout, "--setas", a.setas]
         if a.sem_validar:
             cmd.append("--sem-validar")
         print(f"\n>>> {html.name}")

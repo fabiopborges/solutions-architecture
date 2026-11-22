@@ -383,6 +383,9 @@ FORMAS_TAG = (("Api", "Hexagon"), ("App Web", "WebBrowser"), ("App Móvel", "Mob
               ("Armazenamento", "Cylinder"), ("Mensageria", "Pipe"))
 
 
+ROTEAMENTO = "Curved"   # "Orthogonal" quando gerar_pagina_c4 usa --setas retas-arredondadas
+
+
 def _estilos(modo):
     pt = PALETA_TEMA[modo]
     s = f"            {modo} {{\n"
@@ -392,7 +395,7 @@ def _estilos(modo):
     for tag, forma in FORMAS_TAG:
         s += f'                element "{tag}" {{\n                    shape {forma}\n                }}\n'
     s += f'                element "Group" {{\n                    color {pt["grupo_txt"]}\n                    stroke {pt["grupo_borda"]}\n                    strokeWidth 2\n                }}\n'
-    s += f'                relationship "Relationship" {{\n                    thickness 3\n                    dashed false\n                    color {pt["seta"]}\n                    routing Curved\n                    fontSize 22\n                    width 420\n                }}\n'
+    s += f'                relationship "Relationship" {{\n                    thickness 3\n                    dashed false\n                    color {pt["seta"]}\n                    routing {ROTEAMENTO}\n                    fontSize 22\n                    width 420\n                }}\n'
     s += '                relationship "Assíncrono" {\n                    dashed true\n                }\n'
     s += f'                relationship "Condicional" {{\n                    color {pt["condicional"]}\n                }}\n'
     s += "            }\n"

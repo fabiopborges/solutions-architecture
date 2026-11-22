@@ -2,7 +2,7 @@
 
 ## Pipeline atual (desde 2026-11-11): Structurizr + página HTML — demandas novas
 
-Um comando gera todos os diagramas de uma demanda:
+Um comando gera todos os diagramas de uma demanda (opcionais `--layout dagre|elk` e `--setas curvas|retas-arredondadas`, repassados a `gerar_pagina_c4.py`):
 
 ```bash
 python3 scripts/gerar_diagramas_demanda.py demandas/<nome-da-demanda>
@@ -17,6 +17,8 @@ Entrada, em `demandas/<x>/diagramas/`: `catalogo-componentes.json` (formato v2, 
 | `spec_para_dsl.py` | Spec v2 → Structurizr DSL; valida referências, limite de 12 palavras e schema; emite os avisos |
 | `gerar_pagina_c4.py` | Spec v2 → página HTML autocontida (Docker/Structurizr + Chrome headless + `skills/geracao-diagramas/templates/pagina.template.html`); `--nivel contexto` gera o System Context do mesmo spec |
 | `validar_diagrama_c4.py` | Valida spec, DSL, contraste da paleta, SVGs (elementos e rótulos presentes) e abertura da página no Chrome; roda ao final do gerador (`--sem-validar` desliga) |
+| `exportar_svg_da_pagina_c4.py` | Página HTML → SVG standalone, claro e escuro, com `viewBox` e fundo (para README/docs). Mede o desenho no Chrome. `--horizontal`, `--visoes` |
+| `rotear_setas.py`, `layout_elk.py`, `elk/` | **Experimental, em andamento.** Roteamento de setas com dobras arredondadas e layout ELK (`gerar_pagina_c4.py --setas retas-arredondadas`, `--layout elk`; exige Node e `npm install` em `scripts/elk`). Na demanda PTI0001 o `--layout elk` deixou rótulos de seta soltos longe do desenho; o padrão (`dagre`, curvas) segue sendo o estável e é o usado nos diagramas do README |
 
 Formato e regras: `docs/diagrams/c4-schema-v2.md` (schema formal em `c4-schema-v2.schema.json`).
 
@@ -152,3 +154,11 @@ python3 montar_candidato_sequencia_archify.py SEQUENCIA_SPEC.json CATALOGO.json 
 ## Diagrama de fluxo de dados — sem script dedicado, reusa `montar_candidato_arquitetura_archify.py`
 
 O tipo `dataflow` do ArchiFy exige 2-5 estágios fixos (pensado pra pipeline ETL) — não cabe na nossa modelagem de `dados.md` (entidades + evento/consulta) sem inventar uma taxonomia de estágios artificial (decisão registrada em 2026-08-16). Em vez disso, o diagrama de fluxo de dados usa o **mesmo tipo `architecture`** do Container: componentes = entidades/serviços, conexões = evento (assíncrono) ou consulta (síncrono), rótulo tirado de `dados.md` seção "Fluxo de dados entre componentes". [[agents/geracao-diagramas/AGENT]] monta esse spec (mesmo processo do catálogo/Container, mas a partir de `dados.md` em vez de `desenho.md`) e roda `montar_candidato_arquitetura_archify.py` normalmente — nenhum script novo necessário.
+
+## Publicar os diagramas no README
+
+```bash
+python3 scripts/exportar_svg_da_pagina_c4.py "demandas/<x>/diagramas/c4-container.html" docs/diagrams/c4 container --horizontal --visoes container
+```
+
+Gera `container-light.svg` e `container-dark.svg`; o README os alterna com `<picture>` e `prefers-color-scheme`. Os SVGs atuais vêm da demanda PTI0001 (ver `docs/diagrams/c4/README.md`).

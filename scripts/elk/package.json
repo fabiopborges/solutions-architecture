@@ -1,0 +1,6 @@
+{
+  "name": "c4-layout-elk",
+  "private": true,
+  "description": "Dependência do layout ELK (layered) usado por scripts/layout_elk.py",
+  "dependencies": { "elkjs": "0.9.3" }
+}

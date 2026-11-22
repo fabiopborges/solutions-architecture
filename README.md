@@ -8,7 +8,7 @@ Uma atividade, um agente, um critério de pronto — e nada sai como "entregue" 
 [![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE.md)
 [![Claude Code](https://img.shields.io/badge/roda%20em-Claude%20Code-d97757.svg)](https://claude.com/claude-code)
 [![18 agentes](https://img.shields.io/badge/agentes-18%20%2B%20orquestrador-0f766e.svg)](#os-18-agentes)
-[![ADRs](https://img.shields.io/badge/ADRs-001%E2%80%93023-475569.svg)](adrs/)
+[![ADRs](https://img.shields.io/badge/ADRs-001%E2%80%93022-475569.svg)](adrs/)
 
 </div>
 
@@ -35,7 +35,7 @@ Seja você arquiteto júnior, pleno, sênior ou especialista, a cadeira de decis
 É o oposto de "IA que decide por você": é IA que faz o trabalho inteiro **para que a decisão seja sua, e mais bem informada**.
 
 > [!NOTE]
-> **Status do projeto:** as 18 atividades + o Orquestrador estão especificadas e registradas como skill/subagentes nativos do Claude Code (`/arquiteto-solucoes`). Sete demandas já rodaram ponta a ponta via despacho real de subagente — veja [Estado atual](#estado-atual). Os diagramas C4 deste README são a saída do próprio time rodando sobre si mesmo.
+> **Status do projeto:** as 18 atividades + o Orquestrador estão especificadas e registradas como skill/subagentes nativos do Claude Code (`/arquiteto-solucoes`). Várias demandas já rodaram ponta a ponta via despacho real de subagente — veja [Estado atual](#estado-atual). Os diagramas C4 deste README (Structurizr) são a saída do próprio time rodando sobre si mesmo, na demanda PTI0001.
 
 ---
 
@@ -52,11 +52,9 @@ Seja você arquiteto júnior, pleno, sênior ou especialista, a cadeira de decis
 
 - [1. As seis camadas do Arquiteto de Soluções IA](#1-as-seis-camadas-do-arquiteto-de-soluções-ia)
 - [2. Contexto — quem conversa com o Arquiteto de Soluções IA](#2-contexto--quem-conversa-com-o-arquiteto-de-soluções-ia)
-- [3. Containers — os 18 agentes e as fronteiras de domínio](#3-containers--os-18-agentes-e-as-fronteiras-de-domínio)
+- [3. A ordem de execução da cadeia](#3-a-ordem-de-execução-da-cadeia)
 - [4. Uma demanda ponta a ponta, no tempo](#4-uma-demanda-ponta-a-ponta-no-tempo)
-- [5. Fluxo de dados entre os agentes](#5-fluxo-de-dados-entre-os-agentes)
-- [6. Zoom em um agente: Geração de Diagramas C4](#6-zoom-em-um-agente-geração-de-diagramas-c4)
-- [7. Execução vs. referência no disco](#7-execução-vs-referência-no-disco)
+- [5. Execução vs. referência no disco](#5-execução-vs-referência-no-disco)
 
 **Mão na massa**
 
@@ -120,10 +118,10 @@ Se você já usou um time real de arquitetura, a analogia é direta: em vez de u
 
 ## As vistas da arquitetura
 
-Sete vistas complementares da mesma coisa, do conceito ao disco. **As vistas 2 a 6 não foram desenhadas à mão**: são a saída do agente [Geração de Diagramas C4](agents/geracao-diagramas/AGENT.md) rodando sobre este próprio repositório como demanda — o Arquiteto de Soluções IA aplicado a si mesmo, com `desenho.md`, `dados.md` e as jornadas do próprio time como fonte. Os specs que geraram cada imagem estão em [`docs/diagrams/archify/`](docs/diagrams/archify/).
+Cinco vistas complementares (Contexto e Sequência bastam como exemplo do pipeline) da mesma coisa, do conceito ao disco. **As vistas 2 e 4 não foram desenhadas à mão**: são a saída do agente [Geração de Diagramas C4](agents/geracao-diagramas/AGENT.md) rodando sobre este próprio repositório como a demanda **PTI0001 - Agentes Arquiteto de Soluções** (estado atual) — o Arquiteto de Soluções IA aplicado a si mesmo, com `desenho.md`, `dados.md` e as jornadas do próprio time como fonte. O pipeline é o novo: catálogo + sequências → spec v2 → Structurizr (notação oficial do C4 model) → página HTML ([`scripts/README.md`](scripts/README.md)). Os SVGs ficam em [`docs/diagrams/c4/`](docs/diagrams/c4/); os specs e as páginas HTML interativas, na pasta `diagramas/` da demanda (local, não versionada).
 
 > [!TIP]
-> Todo diagrama abaixo é clicável — abra em tamanho real, alguns são largos. Os SVGs seguem o tema claro/escuro do seu sistema.
+> Todo diagrama abaixo é clicável — abra em tamanho real, alguns são largos. Os SVGs seguem o tema claro/escuro do GitHub. Cor = status do componente: aqui tudo é cinza (**existente**), porque o objeto é o time como ele está hoje, não uma evolução.
 
 ### 1. As seis camadas do Arquiteto de Soluções IA
 
@@ -137,23 +135,16 @@ Tudo o que os agentes decidem, aprendem ou ainda não sabem fica registrado em [
 
 ### 2. Contexto — quem conversa com o Arquiteto de Soluções IA
 
-A vista mais alta: cada caixa é um **bounded context** inteiro, com os agentes daquele domínio colapsados dentro dele, e o único ator de fora é a **Pessoa Operadora** — que dispara a demanda, responde às perguntas de escopo e aprova o gate de saída. Todo o resto acontece entre os agentes.
+A vista mais alta (C4 nível 1): o time de agentes como **uma caixa só**, com as pessoas e os sistemas diretamente ligados a ele — a **Pessoa Operadora**, única fonte de instrução humana (dispara a demanda, responde às perguntas de escopo, aprova ADR e gate de saída), o **Time de desenvolvimento**, que consome o handoff, e as dependências de execução do pipeline de diagramas (**Docker/Structurizr** e **Chrome headless**).
 
-[![Diagrama de contexto C4: bounded contexts do Arquiteto de Soluções IA e os atores externos](docs/diagrams/archify/c4-contexto.svg)](docs/diagrams/archify/c4-contexto.svg)
+<a href="docs/diagrams/c4/contexto-light.svg"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/c4/contexto-dark.svg">
+  <img alt="Diagrama de contexto C4 do time de agentes Arquiteto de Soluções" src="docs/diagrams/c4/contexto-light.svg">
+</picture></a>
 
-### 3. Containers — os 18 agentes e as fronteiras de domínio
+### 3. A ordem de execução da cadeia
 
-Cada agente é um container, e cada moldura tracejada é um **bounded context** (DDD) derivado de uma capacidade de negócio (TOGAF) — os limites dos componentes seguem os limites do domínio, nunca a conveniência técnica.
-
-[![Diagrama de containers C4: os 18 agentes agrupados por bounded context](docs/diagrams/archify/c4-container.svg)](docs/diagrams/archify/c4-container.svg)
-
-| Elemento | Significa |
-| --- | --- |
-| 🟩 Caixa verde | Agente do time (container interno) |
-| ⬜ Caixa cinza | Ator de fora do time — aqui, só a Pessoa Operadora |
-| 🟧 Moldura tracejada | Bounded context — a fronteira de domínio que o agente serve |
-| ➡️ Seta cheia | Despacho ou leitura que **espera** o outro lado terminar |
-| ⇢ Seta tracejada | Despacho em paralelo, que não bloqueia quem chamou |
+Os agentes se agrupam em nove blocos de capacidade (C1 Orquestração a C9 Telemetria, um por capacidade de negócio TOGAF); só a Orquestração, que é a sessão principal, despacha os demais.
 
 A ordem real de execução, com o que roda em paralelo:
 
@@ -172,26 +163,17 @@ Trade-offs e ADR, Geração de Diagramas C4 e o Orquestrador são **transversais
 
 ### 4. Uma demanda ponta a ponta, no tempo
 
-O mesmo fluxo, agora como troca de mensagens: dá para ver onde o Orquestrador solta quatro despachos em paralelo e onde ele volta a segurar tudo até a consolidação final.
+A jornada `pedir-demanda-receber-pacote` como **Dynamic diagram** do C4 (a vista de sequência): as relações entre os blocos, numeradas na ordem em que acontecem — o pedido, o despacho de Concepção, a leitura das regras, o paralelo de Dimensões e Riscos, a entrega em série e a apresentação do pacote ao operador. As outras seis jornadas ficam na pasta `diagramas/` da demanda.
 
-[![Diagrama de sequência de uma demanda completa, do pedido à liberação do pacote](docs/diagrams/archify/sequencia-demanda-processada-e-pacote-entregue.svg)](docs/diagrams/archify/sequencia-demanda-processada-e-pacote-entregue.svg)
-
-### 5. Fluxo de dados entre os agentes
-
-Que artefato cada agente produz e quem lê o quê. É esta vista que mostra por que a cadeia tem a ordem que tem: `desenho.md` precisa estar pronto antes de qualquer modelagem, `dados.md` antes de segurança, tudo antes da consolidação final. É também a única vista onde aparece o **Claude Code Runtime**, que executa cada subagente como processo isolado.
-
-[![Diagrama de fluxo de dados entre os agentes, com os artefatos trocados](docs/diagrams/archify/c4-fluxo-dados.svg)](docs/diagrams/archify/c4-fluxo-dados.svg)
+<a href="docs/diagrams/c4/pedir-demanda-receber-pacote-light.svg"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/c4/pedir-demanda-receber-pacote-dark.svg">
+  <img alt="Dynamic diagram C4 da jornada pedir-demanda-receber-pacote" src="docs/diagrams/c4/pedir-demanda-receber-pacote-light.svg">
+</picture></a>
 
 > [!NOTE]
-> Esta vista omite algumas relações "todo agente → um agente" (telemetria, leitura do compêndio) por limitação de roteamento do gerador, não por decisão de conteúdo. A descrição completa continua em `dados.md`, dentro da demanda.
+> O README exemplifica só Contexto e Sequência. Container, Componente, fluxo de dados e as outras jornadas existem na pasta `diagramas/` da demanda; Landscape/Deployment não são gerados. O pipeline suporta Componente e fluxo de dados (`scripts/README.md`); Landscape e Deployment seguem pendentes (ver `memory.md`).
 
-### 6. Zoom em um agente: Geração de Diagramas C4
-
-Um nível abaixo do container, para mostrar como um agente é montado por dentro — aqui, o que traduz decisão já tomada em diagrama, sem nunca decidir arquitetura.
-
-[![Diagrama de componentes do agente de Geração de Diagramas C4](docs/diagrams/archify/c4-componente-geracao-diagramas.svg)](docs/diagrams/archify/c4-componente-geracao-diagramas.svg)
-
-### 7. Execução vs. referência no disco
+### 5. Execução vs. referência no disco
 
 Este repositório é a raiz de um projeto Claude Code, o que cria duas camadas lado a lado que não devem ser confundidas: uma versão **enxuta e invocável** dentro de `.claude/`, e a **documentação de referência completa** que essa versão enxuta consulta antes de agir.
 
@@ -213,11 +195,11 @@ Os arquivos de execução apontam para os de referência em vez de duplicar cont
 ├── adrs/                   # ADRs formais, aprovados, globais, reaproveitáveis
 ├── demandas/               # Uma pasta por demanda real (local, não versionado)
 │   └── <nome-da-demanda>/
-├── docs/diagrams/          # Vistas do próprio agente (Mermaid à mão + C4 gerado pelo pipeline)
+├── docs/diagrams/          # Vistas do próprio agente (Mermaid à mão + C4 Structurizr em c4/ + legado ArchiFy em archify/)
 ├── rules/
 │   ├── always.md           # O que todo agente sempre faz + hooks
 │   └── never.md            # Paradas duras
-├── scripts/                # Pipeline de diagramas C4 (spec → candidato → SVG)
+├── scripts/                # Pipeline de diagramas C4 (catálogo → spec v2 → Structurizr → HTML/SVG)
 ├── substrate/
 │   ├── compendium.md       # Referência destilada que os agentes leem antes de decidir
 │   └── sources.md          # De onde esse conhecimento vem
@@ -309,7 +291,7 @@ Infraestrutura e Deployment escolhe hospedagem por componente sem provedor fixo 
 
 ### 5. Gerar e manter os diagramas C4 sincronizados com a documentação
 
-O agente de Geração de Diagramas C4 formaliza o que outros já decidiram (spec → candidato mínimo → SVG/HTML interativo, arquitetura e sequência) e **nunca decide arquitetura**. Como ele lê `desenho.md`/`dados.md` em vez de redesenhar à mão, os diagramas não dessincronizam da documentação. Os diagramas deste README são exatamente essa saída, com o time rodando sobre o próprio repositório.
+O agente de Geração de Diagramas C4 formaliza o que outros já decidiram (catálogo + sequências → spec v2 → Structurizr → página HTML interativa com Contexto, Container, Componente, fluxo de dados e Dynamic diagram) e **nunca decide arquitetura**. Como ele lê `desenho.md`/`dados.md` em vez de redesenhar à mão, os diagramas não dessincronizam da documentação. Os diagramas deste README são exatamente essa saída, com o time rodando sobre o próprio repositório.
 
 ### 6. Formalizar decisões como ADRs reaproveitáveis
 
@@ -407,7 +389,7 @@ abrir para todo o histórico.
 | --- | --- | --- |
 | Entendimento, capacidades de negócio, escopo e **não-escopo** | `entendimento.md` | Entendimento e Escopo |
 | Desenho de componentes e integrações por bounded context | `desenho.md` | Desenho de Arquitetura |
-| Diagramas C4 (contexto, containers, sequência) | `diagramas/` | Geração de Diagramas C4 — formaliza o que já foi decidido, nunca decide |
+| Diagramas C4 (contexto, containers, componente, fluxo de dados, Dynamic por jornada) | `diagramas/` | Geração de Diagramas C4 — formaliza o que já foi decidido, nunca decide |
 | Fluxo de dados: entidades, dono, evento vs. consulta, retenção, sensibilidade | `dados.md` | Modelagem de Dados |
 | Decisões de plataforma analítica e de modelo de IA | `dados-analytics.md`, `ia-ml.md` | Os dois especialistas — **só se o gatilho bater de verdade** |
 | Hospedagem, escala, disponibilidade e escolha de provedor | `infraestrutura.md` | Infraestrutura e Deployment |
@@ -458,12 +440,15 @@ abrir para todo o histórico.
 - **Cloud é agnóstica de provedor** ([ADR 001](adrs/adr-001-cloud-agnostica-por-criterio-de-negocio.md)): a escolha é por critério de negócio a cada demanda, não fixada em um provedor.
 - **Microsserviços seguem os limites de domínio** ([ADR 002](adrs/adr-002-microsservicos-como-consequencia-de-ddd.md)): TOGAF (Business Architecture) mapeia capacidades de negócio, DDD traduz isso em bounded contexts.
 
-Duas dessas regras são fluxos próprios, com diagrama gerado pelo mesmo pipeline:
+Duas dessas regras são fluxos próprios, com Dynamic diagram gerado pelo mesmo pipeline:
 
 <details>
 <summary><strong>Toda decisão importante vira um ADR aprovado por uma pessoa</strong></summary>
 
-[![Sequência: decisão importante formalizada como ADR e aprovada por uma pessoa](docs/diagrams/archify/sequencia-adr-aprovado-para-decisao-importante.svg)](docs/diagrams/archify/sequencia-adr-aprovado-para-decisao-importante.svg)
+<a href="docs/diagrams/c4/aprovar-adr-light.svg"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/c4/aprovar-adr-dark.svg">
+  <img alt="Dynamic diagram C4: decisão importante formalizada como ADR e aprovada por uma pessoa" src="docs/diagrams/c4/aprovar-adr-light.svg">
+</picture></a>
 
 O ADR só entra no compêndio de conhecimento — e só passa a valer para demandas futuras — depois da aprovação explícita.
 
@@ -472,9 +457,12 @@ O ADR só entra no compêndio de conhecimento — e só passa a valer para deman
 <details>
 <summary><strong>Dúvida que não fecha em 3 rodadas escala para revisão humana</strong></summary>
 
-[![Sequência: dúvida entre agentes escalada para revisão humana na quarta rodada](docs/diagrams/archify/sequencia-duvida-escalada-revisao-humana.svg)](docs/diagrams/archify/sequencia-duvida-escalada-revisao-humana.svg)
+<a href="docs/diagrams/c4/responder-duvida-so-humano-light.svg"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/c4/responder-duvida-so-humano-dark.svg">
+  <img alt="Dynamic diagram C4: dúvida que só uma pessoa responde, com o agente parado até a resposta" src="docs/diagrams/c4/responder-duvida-so-humano-light.svg">
+</picture></a>
 
-Um agente nunca "resolve" a dúvida chutando no lugar do dono da outra atividade: ou fecha em até 3 rodadas, ou vira pergunta para uma pessoa.
+Um agente nunca "resolve" a dúvida chutando no lugar do dono da outra atividade: ou fecha em até 3 rodadas, ou vira pergunta para uma pessoa. O diagrama mostra o caminho em que a sessão para e pergunta; a escalada na quarta rodada é regra, não mecanismo (sem contador em disco) e por isso não aparece nele.
 
 </details>
 
@@ -482,12 +470,12 @@ Um agente nunca "resolve" a dúvida chutando no lugar do dono da outra atividade
 
 Veja [`memory.md`](memory.md) para o histórico completo de decisões. Resumo honesto:
 
-- As seis camadas do Arquiteto de Soluções IA estão sólidas, o roteiro de 18 atividades está fechado, sete demandas reais já rodaram ponta a ponta via `/arquiteto-solucoes` de verdade (despacho por subagente, não simulação), com custo de processamento medido em tokens reais — ver `telemetria-agentes.md`.
+- As seis camadas do Arquiteto de Soluções IA estão sólidas, o roteiro de 18 atividades está fechado, várias demandas reais já rodaram ponta a ponta via `/arquiteto-solucoes` de verdade (despacho por subagente, não simulação), com custo de processamento medido em tokens reais — ver `telemetria-agentes.md`.
 - **Os subagentes e a skill de entrada estão registrados** em `.claude/agents/` e `.claude/skills/arquiteto-solucoes/`, seguindo o padrão nativo do Claude Code, e já foram exercitados de ponta a ponta em execuções reais.
-- **Dois agentes novos (Geração de Diagramas C4 e Jornadas do Usuário) foram adicionados em 2026-08-15** (ver `memory.md`) para resolver diagramas ASCII dessincronizados entre `desenho.md`/`documentacao-final.md` e para dar um roteiro de sequência a partir dos requisitos. Já rodaram de ponta a ponta em várias demandas reais desde então, incluindo a geração de diagramas de sequência via ArchiFy e a correção que tornou `jornadas.md` sempre determinístico (veredito explícito, nunca ausência silenciosa).
+- **Dois agentes novos (Geração de Diagramas C4 e Jornadas do Usuário) foram adicionados em 2026-08-15** (ver `memory.md`) para resolver diagramas ASCII dessincronizados entre `desenho.md`/`documentacao-final.md` e para dar um roteiro de sequência a partir dos requisitos. Já rodaram de ponta a ponta em várias demandas reais desde então, incluindo a migração do gerador para Structurizr (2026-11-11, ArchiFy virou legado) e a correção que tornou `jornadas.md` sempre determinístico (veredito explícito, nunca ausência silenciosa).
 - **Dos dois especialistas sob demanda, só o de IA/ML já foi acionado de verdade** (`demandas/plataforma-ia-corporativa-v1/`, confirmando que o gatilho dispara quando deveria, depois de três demandas seguidas confirmando só o caminho de não disparar à toa). **O Especialista em Dados e Analytics nunca foi acionado** — nenhuma demanda real até agora teve decisão de plataforma analítica de verdade. Por isso ele não aparece em nenhuma das vistas geradas: nenhuma jornada real o exercita.
 - `tools.md` lista três conexões externas úteis, nenhuma ligada ainda.
-- ADRs 001 a 022 registrados em `adrs/`, com aprovação humana explícita registrada em cada um antes de valer como oficial.
+- ADRs 001 a 022 versionados em `adrs/`, com aprovação humana explícita registrada em cada um antes de valer como oficial. ADRs a partir do 024 são de demandas específicas, ficam só no clone local (git-ignored) e seguem **Proposto** até revisão humana.
 - **Estudo de aderência ao MuleSoft Agent Fabric (exploratório, não integrado à cadeia real):** `registry/agent-cards/`, `orquestracao/`, `governanca/`, `telemetria/interacoes.jsonl` e `servidor/` são artefatos de referência gerados a partir do que já existe (`agents/*/AGENT.md`, `README.md`, `rules/`, `substrate/`, `telemetria-agentes.md`), preparando o repositório para uma eventual migração — nunca decisão de arquitetura nova. Nenhum agente real consome esses arquivos hoje; `tools.md` documenta o que cada um cobre e a lacuna que falta para virar integração de verdade.
 
 ## Estudo de aderência ao MuleSoft Agent Fabric
@@ -518,11 +506,11 @@ Siga sempre esta ordem, para não repetir o anti-padrão de "agente faz-tudo" ne
 
 ## Créditos e agradecimentos
 
-### ArchiFy — o motor por trás de todos os diagramas deste repositório
+### ArchiFy — o motor dos diagramas até 2026-11-11 (legado)
 
-> **Status: legado desde 2026-11-11.** Demandas novas geram diagramas com Structurizr + página HTML ([`scripts/README.md`](scripts/README.md)). O ArchiFy continua vendorizado só para os diagramas já gerados e para demandas antigas, e sua remoção depende de ADR aprovado e de uma demanda real passar pelo caminho novo.
+> **Status: legado desde 2026-11-11.** Os diagramas deste README já não são do ArchiFy: vêm do pipeline Structurizr + página HTML ([`scripts/README.md`](scripts/README.md)). O ArchiFy continua vendorizado só para os artefatos antigos em [`docs/diagrams/archify/`](docs/diagrams/archify/) e para demandas anteriores a essa data; sua remoção depende de ADR aprovado e de uma demanda real passar pelo caminho novo.
 
-Todo diagrama C4 e de sequência que você viu acima foi renderizado pelo **[ArchiFy](https://github.com/tt-a1i/archify)**, de **[@tt-a1i](https://github.com/tt-a1i)**, com base no trabalho original *architecture-diagram-generator* da **Cocoon AI**. Nosso agradecimento sincero ao time do ArchiFy por publicar o projeto em código aberto — ele resolveu, e bem, um problema que nós teríamos resolvido mal.
+Todo diagrama C4 e de sequência deste repositório, até a migração, foi renderizado pelo **[ArchiFy](https://github.com/tt-a1i/archify)**, de **[@tt-a1i](https://github.com/tt-a1i)**, com base no trabalho original *architecture-diagram-generator* da **Cocoon AI**. Nosso agradecimento sincero ao time do ArchiFy por publicar o projeto em código aberto — ele resolveu, e bem, um problema que nós teríamos resolvido mal.
 
 | | |
 | --- | --- |
@@ -530,7 +518,7 @@ Todo diagrama C4 e de sequência que você viu acima foi renderizado pelo **[Arc
 | **Autoria** | tt-a1i (Archify) · Cocoon AI (obra original) |
 | **Licença** | MIT — texto integral e avisos de copyright preservados em [`skills/vendors/archify/LICENSE`](skills/vendors/archify/LICENSE) |
 | **Versão vendorizada** | `v2.14.0`, em `skills/vendors/archify/` |
-| **Como usamos** | CLI nativo (`archify.mjs validate` / `deliver`), conduzido pelo agente [Geração de Diagramas C4](agents/geracao-diagramas/AGENT.md) |
+| **Como usamos** | Hoje só no caminho legado: CLI nativo (`archify.mjs validate` / `deliver`), conduzido pelo agente [Geração de Diagramas C4](agents/geracao-diagramas/AGENT.md) |
 
 **O que ele nos deu.** Antes do ArchiFy, os diagramas deste projeto eram ASCII escrito à mão dentro dos documentos, e dessincronizavam do desenho na primeira mudança. O ArchiFy trocou isso por um pipeline determinístico: o agente escreve um candidato mínimo em JSON tipado, o `validate` devolve **diagnósticos acionáveis** (sobreposição, aresta cruzando nó, ritmo, folga de rótulo) e o `deliver` entrega HTML interativo autocontido. O ganho decisivo para nós foi o motor de layout: paramos de calcular posição em pixel e roteamento de conexão por conta própria — decisão registrada em [`memory.md`](memory.md), 2026-08-16 — e o gerador passou a fazer o que faz melhor que nós.
 

@@ -36,3 +36,6 @@ adrs/
 
 # Log de consultas gerado pelos servidores MCP em servidor/, não versionar.
 servidor/consultas.log
+
+# Dependencias Node do layout ELK (npm install em scripts/elk).
+scripts/elk/node_modules/

@@ -22,6 +22,8 @@ import sys
 
 AQUI = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
+import layout_elk  # noqa: E402
+import rotear_setas  # noqa: E402
 import spec_para_dsl as sd  # noqa: E402
 
 TEMPLATE = AQUI.parent / "skills" / "geracao-diagramas" / "templates" / "pagina.template.html"
@@ -182,6 +184,11 @@ def main():
     ap.add_argument("--saida", required=True)
     ap.add_argument("--pasta")
     ap.add_argument("--nivel", choices=["container", "contexto", "componente", "fluxo-dados"], help="gera este nível a partir do mesmo spec (padrão: o nivel do spec)")
+    ap.add_argument("--setas", choices=["curvas", "retas-arredondadas"], default="curvas",
+                    help="estilo das setas: curvas (padrão) ou retas com dobras arredondadas (rotear_setas.py)")
+    ap.add_argument("--layout", choices=["dagre", "elk"], default="dagre",
+                    help="motor de layout: dagre (padrão do Structurizr) ou elk (layered, via scripts/layout_elk.py; exige node e npm install em scripts/elk)")
+    ap.add_argument("--raio-dobra", type=float, default=32, help="raio das dobras, em unidades do SVG (só com retas-arredondadas)")
     ap.add_argument("--manter-site", action="store_true", help="não apaga o site intermediário do Structurizr")
     ap.add_argument("--sem-validar", action="store_true", help="não roda validar_diagrama_c4 ao final")
     a = ap.parse_args()
@@ -201,8 +208,12 @@ def main():
     if not shutil.which("docker"):
         sys.exit("docker não encontrado no PATH (necessário para o Structurizr).")
     chrome = achar_chrome()
+    if a.layout == "elk":
+        layout_elk.verifica_ambiente()
 
     pasta.mkdir(parents=True, exist_ok=True)
+    if a.setas == "retas-arredondadas":
+        sd.ROTEAMENTO = "Orthogonal"
     dsl = sd.gerar_dsl(spec, horizontal=True)
     (pasta / "workspace.dsl").write_text(dsl, encoding="utf-8")
     m = sd.modelo_pagina(spec, avisos)
@@ -223,7 +234,13 @@ def main():
                        f"--blink-settings=preferredColorScheme={esquema}", "--virtual-time-budget=20000",
                        "--window-size=1600,1200", "--dump-dom", f"file://{site}/index.html#{v}-{sl}"]).stdout
             tema = "dark" if 'data-bs-theme="dark"' in dom else "light"
-            variantes[(v, tema)] = extrai_svg(dom)
+            svg = extrai_svg(dom)
+            if a.layout == "elk":
+                svg = layout_elk.aplicar_elk(svg, "RIGHT" if v.endswith("-h") else "DOWN", m["nivel"], a.raio_dobra)
+            elif a.setas == "retas-arredondadas":
+                svg, av_setas = rotear_setas.rotear_svg(svg, raio=a.raio_dobra)
+                avisos += [x for x in av_setas if x not in avisos]
+            variantes[(v, tema)] = svg
     faltando = [(v, t) for v in tipos for t in ("light", "dark") if (v, t) not in variantes]
     if faltando:
         sys.exit(f"Falhou ao obter variantes: {faltando}")
