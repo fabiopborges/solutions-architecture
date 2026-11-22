@@ -56,7 +56,7 @@ Seja você arquiteto júnior, pleno, sênior ou especialista, a cadeira de decis
 
 - [1. As seis camadas do Arquiteto de Soluções IA](#1-as-seis-camadas-do-arquiteto-de-soluções-ia)
 - [2. Contexto — quem conversa com o Arquiteto de Soluções IA](#2-contexto--quem-conversa-com-o-arquiteto-de-soluções-ia)
-- [3. A ordem de execução da cadeia](#3-a-ordem-de-execução-da-cadeia)
+- [3. Containers — o caminho principal](#3-containers--o-caminho-principal)
 - [4. Uma demanda ponta a ponta, no tempo](#4-uma-demanda-ponta-a-ponta-no-tempo)
 - [5. Execução vs. referência no disco](#5-execução-vs-referência-no-disco)
 
@@ -122,7 +122,7 @@ Se você já usou um time real de arquitetura, a analogia é direta: em vez de u
 
 ## As vistas da arquitetura
 
-Cinco vistas complementares (Contexto e Sequência bastam como exemplo do pipeline) da mesma coisa, do conceito ao disco. **As vistas 2 e 4 não foram desenhadas à mão**: são a saída do agente [Geração de Diagramas C4](agents/geracao-diagramas/AGENT.md) rodando sobre este próprio repositório como a demanda **PTI0001 - Agentes Arquiteto de Soluções** (estado atual) — o Arquiteto de Soluções IA aplicado a si mesmo, com `desenho.md`, `dados.md` e as jornadas do próprio time como fonte. O pipeline é o novo: catálogo + sequências → spec v2 → Structurizr (notação oficial do C4 model) → página HTML ([`scripts/README.md`](scripts/README.md)). Os SVGs ficam em [`docs/diagrams/c4/`](docs/diagrams/c4/); os specs e as páginas HTML interativas, na pasta `diagramas/` da demanda (local, não versionada).
+Cinco vistas complementares  da mesma coisa, do conceito ao disco. **As vistas 2 a 4 não foram desenhadas à mão**: são a saída do agente [Geração de Diagramas C4](agents/geracao-diagramas/AGENT.md) rodando sobre este próprio repositório como a demanda **PTI0001 - Agentes Arquiteto de Soluções** (estado atual) — o Arquiteto de Soluções IA aplicado a si mesmo, com `desenho.md`, `dados.md` e as jornadas do próprio time como fonte. O pipeline é o novo: catálogo + sequências → spec v2 → Structurizr (notação oficial do C4 model) → página HTML ([`scripts/README.md`](scripts/README.md)). Os SVGs ficam em [`docs/diagrams/c4/`](docs/diagrams/c4/); os specs e as páginas HTML interativas, na pasta `diagramas/` da demanda (local, não versionada).
 
 > [!TIP]
 > Todo diagrama abaixo é clicável — abra em tamanho real, alguns são largos. Os SVGs seguem o tema claro/escuro do GitHub. Cor = status do componente: aqui tudo é cinza (**existente**), porque o objeto é o time como ele está hoje, não uma evolução.
@@ -146,9 +146,16 @@ A vista mais alta (C4 nível 1): o time de agentes como **uma caixa só**, com a
   <img alt="Diagrama de contexto C4 do time de agentes Arquiteto de Soluções" src="docs/diagrams/c4/contexto-light.svg">
 </picture></a>
 
-### 3. A ordem de execução da cadeia
+### 3. Containers — o caminho principal
 
-Os agentes se agrupam em nove blocos de capacidade (C1 Orquestração a C9 Telemetria, um por capacidade de negócio TOGAF); só a Orquestração, que é a sessão principal, despacha os demais.
+Os agentes se agrupam em nove blocos de capacidade (C1 Orquestração a C9 Telemetria, um por capacidade de negócio TOGAF); só a Orquestração, que é a sessão principal, despacha os demais. A vista abaixo é **propositalmente reduzida**: só o caminho principal de uma demanda (Orquestração, Concepção, Dimensões, Pacote e Entrega e Conhecimento); a vista completa, com os nove blocos, está na pasta `diagramas/` da demanda.
+
+<a href="docs/diagrams/c4/container-light.svg"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/diagrams/c4/container-dark.svg">
+  <img alt="Diagrama de containers C4 simplificado: Orquestração despacha Concepção, Dimensões e Pacote e Entrega, que leem e gravam no Conhecimento" src="docs/diagrams/c4/container-light.svg">
+</picture></a>
+
+**A ordem de execução da cadeia:**
 
 A ordem real de execução, com o que roda em paralelo:
 
@@ -175,7 +182,7 @@ A jornada `pedir-demanda-receber-pacote` como **Dynamic diagram** do C4 (a vista
 </picture></a>
 
 > [!NOTE]
-> O README exemplifica só Contexto e Sequência. Container, Componente, fluxo de dados e as outras jornadas existem na pasta `diagramas/` da demanda; Landscape/Deployment não são gerados. O pipeline suporta Componente e fluxo de dados (`scripts/README.md`); Landscape e Deployment seguem pendentes (ver `memory.md`).
+> O README exemplifica Contexto, um Container reduzido e a Sequência. O Container completo, Componente, fluxo de dados e as outras jornadas existem na pasta `diagramas/` da demanda; Landscape/Deployment não são gerados. O pipeline suporta Componente e fluxo de dados (`scripts/README.md`); Landscape e Deployment seguem pendentes (ver `memory.md`).
 
 ### 5. Execução vs. referência no disco
 

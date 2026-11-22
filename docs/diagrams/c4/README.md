@@ -5,6 +5,7 @@ SVGs standalone, claro e escuro, extraídos das páginas HTML da demanda **PTI00
 | Arquivo | Visão |
 | --- | --- |
 | `contexto-*.svg` | System Context |
+| `container-*.svg` | Container **reduzido** (operador + C1, C2, C3, C6, C8, só o caminho principal), derivado de `c4-container.json` sem alterar rótulos |
 | `pedir-demanda-receber-pacote-*.svg` | Dynamic diagram da jornada principal |
 | `aprovar-adr-*.svg`, `responder-duvida-so-humano-*.svg` | Dynamic diagram das jornadas de governança |
 
@@ -22,4 +23,4 @@ O exportador acrescenta o nome da visão ao prefixo, exceto quando o prefixo já
 - O tema segue `prefers-color-scheme` do GitHub via `<picture>` no README; aberto direto, o SVG usa o tema do sistema.
 - Sem interação (zoom, legenda, alternância Container/Dynamic): isso só existe na página HTML.
 - Os diagramas são largos e o texto fica pequeno no README; abra o SVG em tamanho real.
-- Só Contexto e Sequência (Dynamic) são exemplificados aqui; Container e demais vistas ficam na demanda.
+- Contexto, Container reduzido e Sequência (Dynamic) são exemplificados aqui; o Container completo e as demais vistas ficam na demanda.
