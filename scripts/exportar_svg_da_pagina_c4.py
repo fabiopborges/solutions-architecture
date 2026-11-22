@@ -4,7 +4,7 @@
 Uso:
     python3 scripts/exportar_svg_da_pagina_c4.py <pagina.html> <pasta-saida> <prefixo> [--visoes container,dynamic] [--horizontal]
 
-Grava <pasta-saida>/<prefixo>-<visao>-light.svg e -dark.svg (a página guarda um SVG por visão, orientação e tema).
+Grava <pasta-saida>/<prefixo>-<visao>-light.svg e -dark.svg (a visão não é repetida se o prefixo já termina nela) (a página guarda um SVG por visão, orientação e tema).
 No README, use <picture> com prefers-color-scheme para escolher o par. Só extrai e valida XML; não altera o desenho.
 """
 import argparse
@@ -91,7 +91,9 @@ def main():
         for tema in ("light", "dark"):
             svg = com_caixa(limpos[f"{v}-{tema}"], caixas[f"{v}-{tema}"], tema)
             xml.dom.minidom.parseString(svg)   # falha alto se não for XML válido
-            nome = out / f"{a.prefixo}-{v.removesuffix('-h')}-{tema}.svg"
+            visao = v.removesuffix("-h")
+            base = a.prefixo if a.prefixo == visao or a.prefixo.endswith("-" + visao) else f"{a.prefixo}-{visao}"   # não repete a visão
+            nome = out / f"{base}-{tema}.svg"
             nome.write_text(svg, encoding="utf-8")
             print("ok:", nome, f"({len(svg) // 1024} KB)")
 

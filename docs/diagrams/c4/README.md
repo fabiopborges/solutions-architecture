@@ -15,7 +15,7 @@ python3 scripts/gerar_diagramas_demanda.py "demandas/PTI0001 - Agentes Arquiteto
 python3 scripts/exportar_svg_da_pagina_c4.py "demandas/PTI0001 - Agentes Arquiteto de Soluções/diagramas/c4-container.html" docs/diagrams/c4 container --horizontal --visoes container
 ```
 
-(renomeie `container-container-*` para `container-*`; o exportador prefixa com o nome da visão.) Requisitos: Python 3, Docker, Chrome. Detalhes em [`scripts/README.md`](../../../scripts/README.md).
+O exportador acrescenta o nome da visão ao prefixo, exceto quando o prefixo já termina nele. Requisitos: Python 3, Docker, Chrome. Detalhes em [`scripts/README.md`](../../../scripts/README.md).
 
 ## Limites conhecidos
 
