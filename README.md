@@ -1,9 +1,13 @@
 <div align="center">
 
+<img src="docs/img/mascote-joao-de-barro.png" alt="Mascote: um joão-de-barro engenheiro, com capacete, planta azul e notebook" width="220">
+
 # Arquiteto de Soluções IA
 
 **Um time de agentes de IA que trabalha como um Arquiteto de Soluções.**
 Uma atividade, um agente, um critério de pronto — e nada sai como "entregue" sem uma pessoa aprovar.
+
+<sub>Nosso mascote é o joão-de-barro: o pássaro que constrói a própria casa com projeto e método, como um arquiteto.</sub>
 
 [![Licença MIT](https://img.shields.io/badge/licen%C3%A7a-MIT-blue.svg)](LICENSE.md)
 [![Claude Code](https://img.shields.io/badge/roda%20em-Claude%20Code-d97757.svg)](https://claude.com/claude-code)
